@@ -84,14 +84,18 @@ public class PatientService {
      * records preferred or recommended doctor.
      * Severity is initialized to PENDING_TRIAGE (reception staff cannot determine severity).
      */
+    /**
+     * Saves or updates a patient citizen record directly to MySQL.
+     * Enforces three-level validation (DOB, dynamic Age, 10-digit phone, address).
+     */
     @Transactional
-    public PatientVisit registerPatientVisit(PatientRegistrationDTO dto) {
+    public Patient savePatient(PatientRegistrationDTO dto) {
         dto.validateBusinessRules();
 
         String patientId = dto.getPatientId();
         Patient patient;
 
-        // Check if existing regular patient by ID or mobile number
+        // Check if existing regular patient by ID
         if (patientId != null && !patientId.trim().isEmpty() && patientRepository.existsById(patientId.trim())) {
             patient = patientRepository.findById(patientId.trim()).get();
             patient.setPatientType("REGULAR");
@@ -102,23 +106,31 @@ public class PatientService {
                 patient.setDateOfBirth(dto.getDateOfBirth());
             }
             if (dto.getGender() != null) patient.setGender(dto.getGender());
-            if (dto.getContactNumber() != null) patient.setContactNumber(dto.getContactNumber());
-            if (dto.getEmail() != null) patient.setEmail(dto.getEmail());
-            if (dto.getAddress() != null) patient.setAddress(dto.getAddress());
+            if (dto.getContactNumber() != null) patient.setContactNumber(dto.getContactNumber().trim());
+            if (dto.getEmail() != null) patient.setEmail(dto.getEmail().trim());
+            if (dto.getAddress() != null) patient.setAddress(dto.getAddress().trim());
             if (dto.getPreferredDoctorId() != null && !dto.getPreferredDoctorId().trim().isEmpty()) {
                 patient.setPreferredDoctorId(dto.getPreferredDoctorId());
             }
-            patient = patientRepository.save(patient);
+            return patientRepository.save(patient);
         } else {
             // Check by contact number to see if returning citizen
-            List<Patient> existingByPhone = patientRepository.findByContactNumber(dto.getContactNumber());
+            List<Patient> existingByPhone = patientRepository.findByContactNumber(dto.getContactNumber().trim());
             if (!existingByPhone.isEmpty()) {
                 patient = existingByPhone.get(0);
                 patient.setPatientType("REGULAR");
+                if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
+                    patient.setFullName(dto.getFullName().trim());
+                }
+                if (dto.getDateOfBirth() != null) {
+                    patient.setDateOfBirth(dto.getDateOfBirth());
+                }
+                if (dto.getGender() != null) patient.setGender(dto.getGender());
+                if (dto.getAddress() != null) patient.setAddress(dto.getAddress().trim());
                 if (dto.getPreferredDoctorId() != null && !dto.getPreferredDoctorId().trim().isEmpty()) {
                     patient.setPreferredDoctorId(dto.getPreferredDoctorId());
                 }
-                patient = patientRepository.save(patient);
+                return patientRepository.save(patient);
             } else {
                 // Register Brand New Patient
                 long count = patientRepository.countTotalPatients();
@@ -134,9 +146,20 @@ public class PatientService {
                         dto.getContactNumber().trim(), dto.getEmail(), dto.getAddress().trim(),
                         "NEW", dto.getPreferredDoctorId()
                 );
-                patient = patientRepository.save(patient);
+                return patientRepository.save(patient);
             }
         }
+    }
+
+    /**
+     * Intake registration: saves patient details, generates clinical visit,
+     * stores Date of Birth and calculates age dynamically,
+     * records preferred or recommended doctor.
+     * Severity is initialized to PENDING_TRIAGE (reception staff cannot determine severity).
+     */
+    @Transactional
+    public PatientVisit registerPatientVisit(PatientRegistrationDTO dto) {
+        Patient patient = savePatient(dto);
 
         // Generate next unique Visit ID
         long visitCount = patientVisitRepository.count();
@@ -162,6 +185,45 @@ public class PatientService {
         visit.setPreferredDoctorId(prefDocId);
 
         return patientVisitRepository.save(visit);
+    }
+
+    /**
+     * Rapid intake for regular/returning patients:
+     * Fetches by Patient ID, records new clinical visit,
+     * and automatically performs doctor availability check.
+     * If preferred doctor is available and on duty, auto-assigns;
+     * If unavailable, offers matching alternative doctors or marks NO_DOCTOR_AVAILABLE.
+     */
+    @Transactional
+    public DoctorAssignmentDecisionDTO registerRegularPatientVisit(String patientId, String category, String specialization, String notes, String preferredDoctorId) {
+        Patient patient = patientRepository.findById(patientId.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Citizen patient record not found with ID: " + patientId));
+
+        patient.setPatientType("REGULAR");
+        if (preferredDoctorId != null && !preferredDoctorId.trim().isEmpty()) {
+            patient.setPreferredDoctorId(preferredDoctorId.trim());
+        }
+        patientRepository.save(patient);
+
+        long visitCount = patientVisitRepository.count();
+        String visitId = String.format("VIS-%04d", 2001 + visitCount);
+        while (patientVisitRepository.existsById(visitId)) {
+            visitCount++;
+            visitId = String.format("VIS-%04d", 2001 + visitCount);
+        }
+
+        String visitCategory = category != null && !category.trim().isEmpty() ? category : "Outpatient";
+        String visitNotes = notes != null && !notes.trim().isEmpty() ? notes : "Regular patient check-in.";
+
+        PatientVisit visit = new PatientVisit(
+                visitId, patient.getPatientId(), "Serious", visitCategory, LocalDateTime.now(), visitNotes
+        );
+        visit.setPreferredDoctorId(patient.getPreferredDoctorId());
+        visit.setVisitStatus("ARRIVED");
+        visit = patientVisitRepository.save(visit);
+
+        // Automatically check if preferred doctor is on duty & available
+        return checkAndAssignDoctor(visit);
     }
 
     /**

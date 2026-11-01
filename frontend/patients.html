@@ -214,128 +214,236 @@
 
     <!-- Patient Registration & Intake Modal -->
     <div id="patient-reg-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 740px;">
+        <div class="modal-card" style="max-width: 760px; max-height: 92vh; display: flex; flex-direction: column;">
             <div class="modal-header">
-                <h3 id="patient-modal-title">Patient Intake & Registration</h3>
+                <div>
+                    <h3 id="patient-modal-title">Patient Intake & Registration</h3>
+                    <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 0 0;">Select whether citizen is new or visits often, then proceed.</p>
+                </div>
                 <button class="modal-close" onclick="closeModal('patient-reg-modal')">&times;</button>
             </div>
-            <form id="patient-reg-form" novalidate>
-                <div class="modal-body">
-                    <input type="hidden" id="existing-patient-id">
-                    
-                    <div class="form-grid">
-                        <div class="form-group full-width" style="background:#f1f8fe; padding:12px; border-radius:6px; border-left:4px solid var(--primary);">
-                            <div style="font-size:12.5px; color:var(--primary); font-weight:600;">
-                                ℹ Patient ID and Visit ID are generated automatically by the backend.
-                                Reception staff does NOT assign patient severity during registration; severity is assessed by medical staff in Triage.
-                                Registration does not automatically force hospital admission.
+            
+            <div class="modal-body" style="overflow-y: auto; padding: 20px;">
+                <!-- Step 1: Patient Segmentation Choice (New vs Regular) -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label" style="font-weight:700; margin-bottom:8px;">Citizen Type / Visit Frequency:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <!-- Option 1: New Patient -->
+                        <div id="card-mode-new" onclick="setIntakeMode('NEW')" style="border: 2px solid var(--primary); background: #eff6ff; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.2s;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="font-size: 15px; font-weight: 700; color: #1e40af;">👤 New Patient</div>
+                                <span class="p360-badge badge-new" id="badge-mode-new">Active Mode</span>
+                            </div>
+                            <div style="font-size: 12px; color: #475569; margin-top: 6px;">
+                                First time visiting this hospital. Enter citizen biographical details, calculate age, and save.
                             </div>
                         </div>
 
-                        <!-- Full Name -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-name">Full Name <span class="required">*</span></label>
-                            <input type="text" id="pat-name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
-                            <div class="field-error-msg" id="err-pat-name">Full Name is mandatory and must contain only valid letters.</div>
-                        </div>
-
-                        <!-- Date of Birth -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-dob">Date of Birth <span class="required">*</span></label>
-                            <input type="date" id="pat-dob" class="form-control" required onchange="calculatePatientAgeFromDob()">
-                            <div class="field-error-msg" id="err-pat-dob">Valid past Date of Birth is mandatory.</div>
-                        </div>
-
-                        <!-- Dynamically Calculated Age (Read-only) -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-age">Calculated Age (Years)</label>
-                            <input type="number" id="pat-age" class="form-control" readonly style="background:#f3f4f6; cursor:not-allowed;" placeholder="Auto-calculated from DOB">
-                            <span class="cell-muted" style="font-size:11px;">Calculated dynamically from Date of Birth.</span>
-                        </div>
-
-                        <!-- Gender -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-gender">Gender <span class="required">*</span></label>
-                            <select id="pat-gender" class="form-control" required>
-                                <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <div class="field-error-msg" id="err-pat-gender">Gender selection is mandatory.</div>
-                        </div>
-
-                        <!-- Mobile Number (10-Digit Indian) -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-phone">10-Digit Mobile Number <span class="required">*</span></label>
-                            <input type="tel" id="pat-phone" class="form-control" maxlength="10" placeholder="e.g. 9841012345" required>
-                            <div class="field-error-msg" id="err-pat-phone">Enter a valid 10-digit Indian mobile number starting with 6-9.</div>
-                        </div>
-
-                        <!-- Email Address -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-email">Email Address (Optional)</label>
-                            <input type="email" id="pat-email" class="form-control" placeholder="e.g. patient@example.com">
-                            <div class="field-error-msg" id="err-pat-email">Please provide a valid email format.</div>
-                        </div>
-
-                        <!-- Residential Address -->
-                        <div class="form-group full-width">
-                            <label class="form-label" for="pat-address">Residential Address <span class="required">*</span></label>
-                            <input type="text" id="pat-address" class="form-control" placeholder="Door No, Street, Locality, District" required>
-                            <div class="field-error-msg" id="err-pat-address">Residential address is mandatory.</div>
-                        </div>
-
-                        <!-- Preferred / Recommended Doctor -->
-                        <div class="form-group full-width">
-                            <label class="form-label" for="pat-pref-doc">
-                                Preferred / Recommended Doctor
-                                <span class="cell-muted" id="pref-doc-hint" style="font-size:11.5px; font-weight:normal; margin-left:6px;">
-                                    (Regular patients display prior preference; New patients can select or receive recommendation)
-                                </span>
-                            </label>
-                            <select id="pat-pref-doc" class="form-control">
-                                <option value="">-- No specific preferred doctor (Auto-assign on triage) --</option>
-                            </select>
-                        </div>
-
-                        <!-- Patient Category -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-category">Intake Category</label>
-                            <select id="pat-category" class="form-control">
-                                <option value="Outpatient">Outpatient (Routine Clinic)</option>
-                                <option value="Diagnostic-Based">Diagnostic-Based (Prescribed Scan/Lab)</option>
-                                <option value="Inpatient">Inpatient (Clinical Monitoring)</option>
-                                <option value="Emergency">Emergency Patient</option>
-                            </select>
-                        </div>
-
-                        <!-- Preferred Specialization -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-specialization">Clinical Specialization</label>
-                            <select id="pat-specialization" class="form-control">
-                                <option value="General Medicine">General Medicine</option>
-                                <option value="Cardiology">Cardiology</option>
-                                <option value="Pulmonology">Pulmonology</option>
-                                <option value="Emergency & Critical Care">Emergency & Critical Care</option>
-                                <option value="Orthopedics">Orthopedics</option>
-                                <option value="Pediatrics">Pediatrics</option>
-                                <option value="Neurology">Neurology</option>
-                                <option value="Nephrology">Nephrology</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label class="form-label" for="pat-notes">Intake Notes / Chief Complaint</label>
-                            <textarea id="pat-notes" class="form-control" rows="2" placeholder="Record primary presenting symptoms or intake reasons..."></textarea>
+                        <!-- Option 2: Regular Patient -->
+                        <div id="card-mode-regular" onclick="setIntakeMode('REGULAR')" style="border: 1px solid var(--border-color); background: #f8fafc; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.2s;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="font-size: 15px; font-weight: 700; color: #334155;">🔄 Regular / Old Patient</div>
+                                <span class="p360-badge badge-regular" id="badge-mode-regular" style="display:none;">Active Mode</span>
+                            </div>
+                            <div style="font-size: 12px; color: #475569; margin-top: 6px;">
+                                Visits often / Already registered. Fetch by Citizen ID or Phone, check preferred doctor & proceed.
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('patient-reg-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btn-submit-patient">Register Patient Visit</button>
+
+                <!-- SECTION A: REGULAR / OLD PATIENT QUICK FETCH & DOCTOR CHECK -->
+                <div id="section-regular-patient" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-weight: 700; font-size: 13.5px; color: #166534; margin-bottom: 8px;">
+                        🔍 Fetch Citizen Record (Returning / Regular Patient)
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1;">
+                            <select id="quick-fetch-patient-select" class="form-control" onchange="onSelectExistingPatient(this.value)">
+                                <option value="">-- Choose Registered Patient (Search ID, Name, or Phone) --</option>
+                            </select>
+                        </div>
+                        <input type="text" id="manual-patient-id-input" class="form-control" placeholder="Or type ID (e.g. P-1001)" style="width: 170px;">
+                        <button type="button" class="btn btn-primary" onclick="fetchPatientDetailsById()" style="background:#16a34a; border-color:#16a34a;">
+                            Fetch ID
+                        </button>
+                    </div>
+
+                    <!-- Fetched Patient Card Preview -->
+                    <div id="fetched-patient-summary" style="display: none; margin-top: 14px; background: #fff; border: 1px solid #86efac; border-radius: 8px; padding: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <span class="p360-badge badge-regular">CITIZEN PROFILE LOADED</span>
+                                <h3 id="fetch-view-name" style="margin: 6px 0 2px 0; font-size: 16px; color: #0f172a;">-</h3>
+                                <div id="fetch-view-details" style="font-size: 12.5px; color: #475569;">
+                                    Citizen ID: <strong>-</strong> | Age: <strong>-</strong> | Gender: <strong>-</strong> | Phone: <strong>-</strong>
+                                </div>
+                                <div id="fetch-view-address" style="font-size: 12px; color: #64748b; margin-top: 2px;">Address: -</div>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="toggleEditRegularPatient()" style="font-size: 11px;">
+                                ✏️ Edit Citizen Details
+                            </button>
+                        </div>
+
+                        <!-- Real-time Preferred Doctor Status Banner -->
+                        <div id="fetch-view-doc-banner" style="margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                            <!-- Filled dynamically -->
+                        </div>
+
+                        <!-- Regular Visit Options -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
+                            <div>
+                                <label class="form-label" for="reg-visit-category">Visit Category</label>
+                                <select id="reg-visit-category" class="form-control">
+                                    <option value="Outpatient">Outpatient (Routine Follow-up)</option>
+                                    <option value="Inpatient">Inpatient (Monitoring)</option>
+                                    <option value="Diagnostic-Based">Diagnostic-Based (Prescribed Tests)</option>
+                                    <option value="Emergency">Emergency</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="reg-visit-notes">Symptoms / Chief Complaint</label>
+                                <input type="text" id="reg-visit-notes" class="form-control" placeholder="e.g. Regular BP/Sugar checkup, chest discomfort">
+                            </div>
+                        </div>
+
+                        <!-- Action Button for Regular Patient -->
+                        <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('patient-reg-modal')">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="proceedRegularPatientVisit()" style="padding: 10px 20px; font-weight: 700; font-size: 13.5px; background: #0284c7; border-color: #0284c7;">
+                                🩺 Check Doctor Availability & Register Visit
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+                <!-- SECTION B: FULL PATIENT REGISTRATION / EDIT FORM -->
+                <form id="patient-reg-form" novalidate>
+                    <input type="hidden" id="existing-patient-id">
+                    
+                    <div id="section-new-patient-form">
+                        <div class="form-grid">
+                            <div class="form-group full-width" style="background:#f1f8fe; padding:10px 14px; border-radius:6px; border-left:4px solid var(--primary);">
+                                <div style="font-size:12.5px; color:var(--primary); font-weight:600;">
+                                    ℹ Full citizen identity records are saved to MySQL. Age is dynamically calculated from Date of Birth.
+                                    Severity is assessed by medical staff in Triage, not by Reception.
+                                </div>
+                            </div>
+
+                            <!-- Full Name -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-name">Full Name <span class="required">*</span></label>
+                                <input type="text" id="pat-name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
+                                <div class="field-error-msg" id="err-pat-name">Full Name is mandatory and must contain only valid letters.</div>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-dob">Date of Birth <span class="required">*</span></label>
+                                <input type="date" id="pat-dob" class="form-control" required onchange="calculatePatientAgeFromDob()">
+                                <div class="field-error-msg" id="err-pat-dob">Valid past Date of Birth is mandatory.</div>
+                            </div>
+
+                            <!-- Dynamically Calculated Age (Read-only) -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-age">Calculated Age (Years)</label>
+                                <input type="number" id="pat-age" class="form-control" readonly style="background:#f3f4f6; cursor:not-allowed;" placeholder="Auto-calculated from DOB">
+                                <span class="cell-muted" style="font-size:11px;">Calculated dynamically from Date of Birth.</span>
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-gender">Gender <span class="required">*</span></label>
+                                <select id="pat-gender" class="form-control" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="field-error-msg" id="err-pat-gender">Gender selection is mandatory.</div>
+                            </div>
+
+                            <!-- Mobile Number (10-Digit Indian) -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-phone">10-Digit Mobile Number <span class="required">*</span></label>
+                                <input type="tel" id="pat-phone" class="form-control" maxlength="10" placeholder="e.g. 9841012345" required>
+                                <div class="field-error-msg" id="err-pat-phone">Enter a valid 10-digit Indian mobile number starting with 6-9.</div>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-email">Email Address (Optional)</label>
+                                <input type="email" id="pat-email" class="form-control" placeholder="e.g. patient@example.com">
+                                <div class="field-error-msg" id="err-pat-email">Please provide a valid email format.</div>
+                            </div>
+
+                            <!-- Residential Address -->
+                            <div class="form-group full-width">
+                                <label class="form-label" for="pat-address">Residential Address <span class="required">*</span></label>
+                                <input type="text" id="pat-address" class="form-control" placeholder="Door No, Street, Locality, District" required>
+                                <div class="field-error-msg" id="err-pat-address">Residential address is mandatory.</div>
+                            </div>
+
+                            <!-- Preferred / Recommended Doctor -->
+                            <div class="form-group full-width">
+                                <label class="form-label" for="pat-pref-doc">
+                                    Preferred / Recommended Doctor
+                                    <span class="cell-muted" id="pref-doc-hint" style="font-size:11.5px; font-weight:normal; margin-left:6px;">
+                                        (Regular patients display prior preference; New patients select or receive recommendation)
+                                    </span>
+                                </label>
+                                <select id="pat-pref-doc" class="form-control">
+                                    <option value="">-- No specific preferred doctor (Auto-assign on triage) --</option>
+                                </select>
+                            </div>
+
+                            <!-- Patient Category -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-category">Intake Category</label>
+                                <select id="pat-category" class="form-control">
+                                    <option value="Outpatient">Outpatient (Routine Clinic)</option>
+                                    <option value="Diagnostic-Based">Diagnostic-Based (Prescribed Scan/Lab)</option>
+                                    <option value="Inpatient">Inpatient (Clinical Monitoring)</option>
+                                    <option value="Emergency">Emergency Patient</option>
+                                </select>
+                            </div>
+
+                            <!-- Preferred Specialization -->
+                            <div class="form-group">
+                                <label class="form-label" for="pat-specialization">Clinical Specialization</label>
+                                <select id="pat-specialization" class="form-control">
+                                    <option value="General Medicine">General Medicine</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Pulmonology">Pulmonology</option>
+                                    <option value="Emergency & Critical Care">Emergency & Critical Care</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Nephrology">Nephrology</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label" for="pat-notes">Intake Notes / Chief Complaint</label>
+                                <textarea id="pat-notes" class="form-control" rows="2" placeholder="Record primary presenting symptoms or intake reasons..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Footer for Form Mode -->
+                        <div class="modal-footer" style="padding-top:16px; margin-top:16px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('patient-reg-modal')">Cancel</button>
+                            <div style="display:flex; gap:10px;">
+                                <button type="button" class="btn btn-success" onclick="savePatientOnly()" style="background:#059669; border-color:#059669; color:#fff; font-weight:600;">
+                                    💾 Save Patient Details
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="btn-submit-patient">
+                                    💾 Save & Register Clinical Visit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -8,6 +8,8 @@ let visitsList = [];
 let doctorsList = [];
 let activePatientFilter = 'ALL'; // ALL, NEW, REGULAR
 let currentRole = 'RECEPTION'; // RECEPTION, DOCTOR, ADMIN
+let currentIntakeMode = 'NEW'; // NEW, REGULAR
+let selectedRegularPatient = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Set max date for DOB to today
@@ -327,6 +329,249 @@ function validatePatientForm() {
     return isValid;
 }
 
+function setIntakeMode(mode) {
+    currentIntakeMode = mode;
+    const cardNew = document.getElementById('card-mode-new');
+    const cardReg = document.getElementById('card-mode-regular');
+    const badgeNew = document.getElementById('badge-mode-new');
+    const badgeReg = document.getElementById('badge-mode-regular');
+    const sectionReg = document.getElementById('section-regular-patient');
+    const sectionNew = document.getElementById('section-new-patient-form');
+    const titleEl = document.getElementById('patient-modal-title');
+
+    if (mode === 'NEW') {
+        if (cardNew) {
+            cardNew.style.border = '2px solid var(--primary)';
+            cardNew.style.background = '#eff6ff';
+        }
+        if (cardReg) {
+            cardReg.style.border = '1px solid var(--border-color)';
+            cardReg.style.background = '#f8fafc';
+        }
+        if (badgeNew) badgeNew.style.display = 'inline-block';
+        if (badgeReg) badgeReg.style.display = 'none';
+        if (sectionReg) sectionReg.style.display = 'none';
+        if (sectionNew) sectionNew.style.display = 'block';
+        if (titleEl) titleEl.textContent = 'Register New Patient Citizen';
+
+        document.getElementById('existing-patient-id').value = '';
+        const nameInput = document.getElementById('pat-name');
+        if (nameInput) nameInput.readOnly = false;
+        populatePreferredDoctorSelect();
+    } else {
+        if (cardReg) {
+            cardReg.style.border = '2px solid #16a34a';
+            cardReg.style.background = '#f0fdf4';
+        }
+        if (cardNew) {
+            cardNew.style.border = '1px solid var(--border-color)';
+            cardNew.style.background = '#f8fafc';
+        }
+        if (badgeReg) badgeReg.style.display = 'inline-block';
+        if (badgeNew) badgeNew.style.display = 'none';
+        if (sectionReg) sectionReg.style.display = 'block';
+        if (sectionNew) sectionNew.style.display = 'none';
+        if (titleEl) titleEl.textContent = 'Returning / Regular Patient Intake';
+
+        populateQuickFetchPatientSelect();
+    }
+}
+
+function populateQuickFetchPatientSelect() {
+    const select = document.getElementById('quick-fetch-patient-select');
+    if (!select) return;
+
+    select.innerHTML = `<option value="">-- Choose Registered Citizen (Search ID, Name, or Phone) --</option>`;
+    patientsList.forEach(p => {
+        const typeLabel = p.patientType === 'REGULAR' ? 'REGULAR' : 'NEW';
+        select.innerHTML += `<option value="${p.patientId}">${p.patientId} - ${p.fullName} (📞 ${p.contactNumber}) [${typeLabel}]</option>`;
+    });
+}
+
+function onSelectExistingPatient(patientId) {
+    if (!patientId) {
+        selectedRegularPatient = null;
+        const summary = document.getElementById('fetched-patient-summary');
+        if (summary) summary.style.display = 'none';
+        return;
+    }
+    const pat = patientsList.find(p => p.patientId === patientId);
+    if (pat) {
+        displayFetchedPatient(pat);
+    }
+}
+
+function fetchPatientDetailsById() {
+    let inputId = document.getElementById('manual-patient-id-input')?.value.trim();
+    if (!inputId) {
+        inputId = document.getElementById('quick-fetch-patient-select')?.value;
+    }
+
+    if (!inputId) {
+        showToast('Please enter a Citizen ID (e.g. P-1001) or choose from the dropdown.', 'warning');
+        return;
+    }
+
+    // Try finding in current patientsList
+    const pat = patientsList.find(p => 
+        p.patientId.toLowerCase() === inputId.toLowerCase() ||
+        (p.contactNumber && p.contactNumber.includes(inputId))
+    );
+
+    if (pat) {
+        displayFetchedPatient(pat);
+    } else {
+        // Fetch from API
+        api.get(`/patients/${inputId}`)
+            .then(fetched => {
+                displayFetchedPatient(fetched);
+            })
+            .catch(err => {
+                showToast(`Citizen record '${inputId}' not found. Please verify ID.`, 'error');
+            });
+    }
+}
+
+function displayFetchedPatient(pat) {
+    selectedRegularPatient = pat;
+
+    const summaryEl = document.getElementById('fetched-patient-summary');
+    if (!summaryEl) return;
+    summaryEl.style.display = 'block';
+
+    document.getElementById('fetch-view-name').textContent = pat.fullName;
+    document.getElementById('fetch-view-details').innerHTML = 
+        `Citizen ID: <strong>${pat.patientId}</strong> | Age: <strong>${pat.age != null ? pat.age + ' yrs' : '-'}</strong> | Gender: <strong>${pat.gender}</strong> | Phone: <strong>📞 ${pat.contactNumber}</strong>`;
+    document.getElementById('fetch-view-address').textContent = `Address: ${pat.address || 'N/A'}`;
+
+    // Fill hidden form fields in case user wants to edit or register
+    document.getElementById('existing-patient-id').value = pat.patientId;
+    document.getElementById('pat-name').value = pat.fullName;
+    if (pat.dateOfBirth) {
+        document.getElementById('pat-dob').value = pat.dateOfBirth;
+        calculatePatientAgeFromDob();
+    }
+    if (pat.gender) document.getElementById('pat-gender').value = pat.gender;
+    if (pat.contactNumber) document.getElementById('pat-phone').value = pat.contactNumber;
+    if (pat.email) document.getElementById('pat-email').value = pat.email;
+    if (pat.address) document.getElementById('pat-address').value = pat.address;
+    populatePreferredDoctorSelect(pat.preferredDoctorId || '');
+
+    // Doctor Live Availability Evaluation Banner
+    const docBanner = document.getElementById('fetch-view-doc-banner');
+    if (docBanner) {
+        if (pat.preferredDoctorId) {
+            const doc = doctorsList.find(d => d.doctorId === pat.preferredDoctorId);
+            if (doc) {
+                if (doc.dutyStatus === 'ON_DUTY' && doc.availabilityStatus === 'AVAILABLE') {
+                    docBanner.style.background = '#dcfce7';
+                    docBanner.style.color = '#15803d';
+                    docBanner.style.border = '1px solid #86efac';
+                    docBanner.innerHTML = `🟢 Previously Preferred Doctor: <strong>Dr. ${doc.doctorName} (${doc.specialization})</strong> is <strong>ON DUTY & AVAILABLE</strong>. Will be assigned automatically.`;
+                } else if (doc.dutyStatus === 'OFF_DUTY') {
+                    docBanner.style.background = '#fef3c7';
+                    docBanner.style.color = '#92400e';
+                    docBanner.style.border = '1px solid #fde68a';
+                    docBanner.innerHTML = `🟡 Previously Preferred Doctor: <strong>Dr. ${doc.doctorName} (${doc.specialization})</strong> is currently <strong>OFF DUTY</strong>. An alternative doctor will be offered immediately.`;
+                } else {
+                    docBanner.style.background = '#eff6ff';
+                    docBanner.style.color = '#1e40af';
+                    docBanner.style.border = '1px solid #bfdbfe';
+                    docBanner.innerHTML = `🔵 Previously Preferred Doctor: <strong>Dr. ${doc.doctorName} (${doc.specialization})</strong> is in consultation. Availability checked at intake.`;
+                }
+            } else {
+                docBanner.style.background = '#eff6ff';
+                docBanner.style.color = '#1e40af';
+                docBanner.style.border = '1px solid #bfdbfe';
+                docBanner.innerHTML = `ℹ️ Preferred Doctor ID: <strong>${pat.preferredDoctorId}</strong>. Duty status evaluated on intake.`;
+            }
+        } else {
+            docBanner.style.background = '#f1f5f9';
+            docBanner.style.color = '#475569';
+            docBanner.style.border = '1px solid #cbd5e1';
+            docBanner.innerHTML = `ℹ️ No preferred doctor on record. A suitable specialist will be matched automatically during clinical triage.`;
+        }
+    }
+}
+
+function toggleEditRegularPatient() {
+    const formSection = document.getElementById('section-new-patient-form');
+    if (formSection) {
+        formSection.style.display = formSection.style.display === 'none' ? 'block' : 'none';
+        if (formSection.style.display === 'block') {
+            document.getElementById('btn-submit-patient').textContent = '💾 Save Changes & Register Visit';
+        }
+    }
+}
+
+async function savePatientOnly() {
+    if (!validatePatientForm()) {
+        return;
+    }
+
+    const data = {
+        patientId: document.getElementById('existing-patient-id')?.value || null,
+        fullName: document.getElementById('pat-name').value.trim(),
+        dateOfBirth: document.getElementById('pat-dob').value,
+        gender: document.getElementById('pat-gender').value,
+        contactNumber: document.getElementById('pat-phone').value.trim(),
+        email: document.getElementById('pat-email').value.trim() || null,
+        address: document.getElementById('pat-address').value.trim(),
+        preferredDoctorId: document.getElementById('pat-pref-doc')?.value || null,
+        patientCategory: document.getElementById('pat-category').value,
+        preferredSpecialization: document.getElementById('pat-specialization')?.value || 'General Medicine',
+        notes: document.getElementById('pat-notes')?.value || 'Citizen profile saved at reception'
+    };
+
+    try {
+        const savedPatient = await api.post('/patients', data);
+        showToast(`Patient details saved successfully in database! Citizen ID: ${savedPatient.patientId}`, 'success');
+        closeModal('patient-reg-modal');
+        document.getElementById('patient-reg-form').reset();
+        await loadPatients();
+        updatePatientCounts();
+    } catch (error) {
+        console.error('Save patient error:', error);
+        showToast(error.message || 'Failed to save patient details. Please check values.', 'error');
+    }
+}
+
+async function proceedRegularPatientVisit() {
+    if (!selectedRegularPatient) {
+        showToast('Please fetch or select a registered regular patient first.', 'warning');
+        return;
+    }
+
+    const payload = {
+        patientId: selectedRegularPatient.patientId,
+        patientCategory: document.getElementById('reg-visit-category')?.value || 'Outpatient',
+        notes: document.getElementById('reg-visit-notes')?.value.trim() || 'Regular patient intake check-in',
+        preferredDoctorId: selectedRegularPatient.preferredDoctorId || null,
+        preferredSpecialization: document.getElementById('pat-specialization')?.value || 'General Medicine'
+    };
+
+    try {
+        const decision = await api.post('/patients/regular-visit', payload);
+        closeModal('patient-reg-modal');
+        await loadPatients();
+        await loadVisits();
+
+        if (decision.status === 'ASSIGNED') {
+            showToast(`Doctor Assigned! ${decision.message}. Visit ${decision.visitId} sent to consultation.`, 'success');
+        } else if (decision.status === 'ALTERNATIVE_OFFERED') {
+            showToast(`Preferred doctor is off-duty. Offering alternative available doctors...`, 'info');
+            openAlternativeDoctorModal(decision.visitId);
+        } else if (decision.status === 'NO_DOCTOR_AVAILABLE') {
+            showToast(`No doctor available. Visit ${decision.visitId} added to waiting queue. Patient records preserved.`, 'warning');
+        } else {
+            showToast(`Visit ${decision.visitId} created successfully.`, 'success');
+        }
+    } catch (error) {
+        console.error('Regular patient intake error:', error);
+        showToast(error.message || 'Failed to register regular patient visit.', 'error');
+    }
+}
+
 function setupPatientForm() {
     const form = document.getElementById('patient-reg-form');
     if (!form) return;
@@ -367,38 +612,34 @@ function setupPatientForm() {
 }
 
 function openNewPatientModal() {
-    document.getElementById('patient-modal-title').textContent = 'Register New Patient Citizen';
     document.getElementById('existing-patient-id').value = '';
-    document.getElementById('pat-name').readOnly = false;
-    document.getElementById('pat-dob').readOnly = false;
     document.getElementById('patient-reg-form').reset();
+    selectedRegularPatient = null;
+    const summaryEl = document.getElementById('fetched-patient-summary');
+    if (summaryEl) summaryEl.style.display = 'none';
     populatePreferredDoctorSelect();
     hideAllErrors();
+    setIntakeMode('NEW');
     openModal('patient-reg-modal');
 }
 
 function openNewVisitForPatient(patientId, fullName, preferredDocId) {
-    document.getElementById('patient-modal-title').textContent = `New Clinical Visit for ${fullName} (${patientId})`;
-    document.getElementById('existing-patient-id').value = patientId;
-    document.getElementById('pat-name').value = fullName;
-    document.getElementById('pat-name').readOnly = true;
+    document.getElementById('patient-reg-form').reset();
+    hideAllErrors();
+    setIntakeMode('REGULAR');
+    openModal('patient-reg-modal');
 
-    // Fetch existing patient details to pre-populate DOB, gender, phone
+    // Automatically select the patient in the dropdown
+    const select = document.getElementById('quick-fetch-patient-select');
+    if (select) select.value = patientId;
+
     const pat = patientsList.find(p => p.patientId === patientId);
     if (pat) {
-        if (pat.dateOfBirth) {
-            document.getElementById('pat-dob').value = pat.dateOfBirth;
-            calculatePatientAgeFromDob();
-        }
-        if (pat.gender) document.getElementById('pat-gender').value = pat.gender;
-        if (pat.contactNumber) document.getElementById('pat-phone').value = pat.contactNumber;
-        if (pat.email) document.getElementById('pat-email').value = pat.email;
-        if (pat.address) document.getElementById('pat-address').value = pat.address;
+        displayFetchedPatient(pat);
+    } else {
+        document.getElementById('manual-patient-id-input').value = patientId;
+        fetchPatientDetailsById();
     }
-
-    populatePreferredDoctorSelect(preferredDocId || (pat ? pat.preferredDoctorId : ''));
-    hideAllErrors();
-    openModal('patient-reg-modal');
 }
 
 function hideAllErrors() {

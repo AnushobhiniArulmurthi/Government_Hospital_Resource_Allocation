@@ -49,11 +49,34 @@ public class PatientController {
         return ApiResponse.ok(patientService.getVisitsByPatientId(id));
     }
 
+    @PostMapping
+    public ApiResponse<Patient> savePatientDetails(@Valid @RequestBody PatientRegistrationDTO dto) {
+        Patient patient = patientService.savePatient(dto);
+        return ApiResponse.ok("Patient details saved successfully with Citizen ID: " + patient.getPatientId(), patient);
+    }
+
     @PostMapping("/register")
     public ApiResponse<PatientVisit> registerPatient(@Valid @RequestBody PatientRegistrationDTO dto) {
         PatientVisit visit = patientService.registerPatientVisit(dto);
         return ApiResponse.ok("Patient visit registered successfully with Visit ID: " + visit.getVisitId() + 
                 ". Status: PENDING_TRIAGE (awaiting medical assessment)", visit);
+    }
+
+    @PostMapping("/regular-visit")
+    public ApiResponse<DoctorAssignmentDecisionDTO> registerRegularPatientVisit(@RequestBody Map<String, Object> body) {
+        String patientId = (String) body.get("patientId");
+        if (patientId == null || patientId.trim().isEmpty()) {
+            return ApiResponse.error("Patient ID is mandatory for regular patient intake.");
+        }
+        String category = (String) body.get("patientCategory");
+        String specialization = (String) body.get("preferredSpecialization");
+        String notes = (String) body.get("notes");
+        String preferredDoctorId = (String) body.get("preferredDoctorId");
+
+        DoctorAssignmentDecisionDTO decision = patientService.registerRegularPatientVisit(
+                patientId, category, specialization, notes, preferredDoctorId
+        );
+        return ApiResponse.ok(decision.getMessage(), decision);
     }
 
     @PostMapping("/visits/{visitId}/triage")

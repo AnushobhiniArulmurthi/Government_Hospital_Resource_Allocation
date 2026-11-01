@@ -428,4 +428,34 @@ public class HospitalSystemTest {
         assertNotNull(profile.getDischarges());
         assertNotNull(profile.getResourceAllocations());
     }
+
+    @Test
+    @Order(16)
+    @DisplayName("TC 41: Save patient details directly & Regular patient intake with ID fetch and doctor check")
+    public void testSavePatientAndRegularPatientCheckin() {
+        // 1. Direct Save Patient Details (without requiring visit)
+        String uniqueMobile = "9" + String.format("%09d", (System.currentTimeMillis() + 99) % 1000000000L);
+        PatientRegistrationDTO saveDto = new PatientRegistrationDTO();
+        saveDto.setFullName("Kavitha Selvan");
+        saveDto.setDateOfBirth(java.time.LocalDate.of(1991, 7, 24));
+        saveDto.setGender("Female");
+        saveDto.setContactNumber(uniqueMobile);
+        saveDto.setAddress("25 Gandhi Road, Salem");
+        saveDto.setPreferredDoctorId("D-030");
+
+        Patient savedCitizen = patientService.savePatient(saveDto);
+        assertNotNull(savedCitizen);
+        assertNotNull(savedCitizen.getPatientId());
+        assertEquals("Kavitha Selvan", savedCitizen.getFullName());
+        assertEquals("D-030", savedCitizen.getPreferredDoctorId());
+
+        // 2. Regular patient intake by fetching ID and checking doctor availability
+        DoctorAssignmentDecisionDTO decision = patientService.registerRegularPatientVisit(
+                savedCitizen.getPatientId(), "Outpatient", "Cardiology", "Follow-up BP check", "D-030"
+        );
+        assertNotNull(decision);
+        assertNotNull(decision.getVisitId());
+        assertEquals(savedCitizen.getPatientId(), decision.getPatientId());
+        assertTrue("ASSIGNED".equals(decision.getStatus()) || "ALTERNATIVE_OFFERED".equals(decision.getStatus()) || "NO_DOCTOR_AVAILABLE".equals(decision.getStatus()));
+    }
 }
