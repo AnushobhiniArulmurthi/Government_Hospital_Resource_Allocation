@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Waiting Queues | GHRAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/tables.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="hospital-logo">🏥</div>
+                <div class="hospital-title">
+                    <h2>GHRAS PORTAL</h2>
+                    <p>Nalam District GH</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Core Management</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
+                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
+                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
+                
+                <div class="nav-section-title">Resource Inventory</div>
+                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
+                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
+
+                <div class="nav-section-title">Operations & Network</div>
+                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
+                <a href="waiting-queue.html" class="nav-item active"><span class="nav-icon">⏳</span> Waiting Queues</a>
+                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
+                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <header class="top-header">
+                <div class="page-headline">
+                    <h1>Priority Waiting Queues</h1>
+                    <p>Dynamic Min-Heap Priority Ordering (Severity Level 1=Critical > 2=Serious > 3=Minor, Tie-Broken by Arrival Timestamp)</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="loadQueues()">🔄 Refresh Queues</button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Info Alert -->
+                <div style="background:#e0f2fe; border-left:4px solid #0284c7; padding:14px 18px; border-radius:6px; margin-bottom:24px; font-size:13.5px; color:#0369a1;">
+                    <strong>DSA Mechanism:</strong> Both queues are managed via Java <code>PriorityQueue&lt;E&gt;</code> backed by a synchronized binary min-heap. When doctors complete consultations or inpatients are discharged, the highest-priority waiting patient is automatically popped from the head of the queue.
+                </div>
+
+                <!-- Consultation Waiting Queue Section -->
+                <div style="margin-bottom:32px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3 style="color:var(--text-primary); font-size:16px; margin:0;">1. Doctor Consultation Priority Queue</h3>
+                            <span id="cq-count-badge" class="badge badge-info">0</span>
+                        </div>
+                        <button id="btn-process-cq" class="btn btn-primary btn-sm">
+                            ⚡ Re-Evaluate & Auto-Assign to Idle Doctors
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Queue Rank</th>
+                                    <th>Visit ID</th>
+                                    <th>Patient ID</th>
+                                    <th>Triage Severity</th>
+                                    <th>Department Required</th>
+                                    <th>Triage Registration Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="consultation-queue-body">
+                                <tr><td colspan="7" class="empty-state">Loading consultation queue...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resource & Bed Waiting Queue Section -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3 style="color:var(--text-primary); font-size:16px; margin:0;">2. Bed & Critical Equipment Waiting Queue</h3>
+                            <span id="rq-count-badge" class="badge badge-warning">0</span>
+                        </div>
+                        <button id="btn-process-rq" class="btn btn-primary btn-sm">
+                            ⚡ Re-Evaluate & Allocate Newly Released Resources
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Queue Rank</th>
+                                    <th>Visit ID</th>
+                                    <th>Patient ID</th>
+                                    <th>Triage Severity</th>
+                                    <th>Required Resource / Bed Type</th>
+                                    <th>Request Timestamp</th>
+                                    <th>Queue Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resource-queue-body">
+                                <tr><td colspan="7" class="empty-state">Loading resource queue...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/waiting-queue.js"></script>
+</body>
+</html>

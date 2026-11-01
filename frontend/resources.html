@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Resources | GHRAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/tables.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="hospital-logo">🏥</div>
+                <div class="hospital-title">
+                    <h2>GHRAS PORTAL</h2>
+                    <p>Nalam District GH</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Core Management</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
+                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
+                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
+                
+                <div class="nav-section-title">Resource Inventory</div>
+                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
+                <a href="resources.html" class="nav-item active"><span class="nav-icon">📦</span> Medical Resources</a>
+                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
+
+                <div class="nav-section-title">Operations & Network</div>
+                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
+                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
+                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
+                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <header class="top-header">
+                <div class="page-headline">
+                    <h1>Medical Resource & Inventory Management</h1>
+                    <p>Reusable medical equipment, consumable supplies, and specialized hospital facilities</p>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label class="form-label" style="margin: 0;">Resource Category:</label>
+                        <select id="resource-cat-filter" class="form-control" style="width: auto;">
+                            <option value="">All Categories</option>
+                            <option value="EQUIPMENT">Medical Equipment (Reusable)</option>
+                            <option value="SUPPLY">Medical Supplies (Consumables)</option>
+                            <option value="FACILITY">Hospital Facilities</option>
+                        </select>
+                    </div>
+                    <div style="font-size:12.5px; color:var(--text-secondary);">
+                        Consumables are automatically deducted upon use; equipment is returned upon discharge.
+                    </div>
+                </div>
+
+                <!-- Resources Inventory Table -->
+                <div class="table-card" style="margin-bottom: 28px;">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size: 15px; font-weight: 700;">Live Hospital Inventory (H-001 Primary Hospital)</h3>
+                        <span class="badge badge-info">Inheritance: Resource.java</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Resource ID</th>
+                                    <th>Resource Item</th>
+                                    <th>Category</th>
+                                    <th>Available / Total</th>
+                                    <th>Currently Allocated</th>
+                                    <th>Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resources-table-body">
+                                <tr><td colspan="7" class="empty-state">Loading resources...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resource Transaction Audit History -->
+                <div class="table-card">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size: 15px; font-weight: 700;">Resource Allocation & Deallocation Audit Log</h3>
+                        <span class="badge badge-available">Real-time History Stream</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Resource Name</th>
+                                    <th>Action</th>
+                                    <th>Quantity</th>
+                                    <th>Patient / Visit</th>
+                                    <th>Timestamp</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resource-history-body">
+                                <tr><td colspan="6" class="empty-state">Loading audit transactions...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Allocate Resource Modal -->
+    <div id="allocate-resource-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="alloc-res-title">Allocate Resource</h3>
+                <button class="modal-close" onclick="closeModal('allocate-resource-modal')">&times;</button>
+            </div>
+            <form onsubmit="handleResourceAllocateSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="alloc-res-id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="alloc-res-visit-id">Patient Visit ID <span class="required">*</span></label>
+                            <input type="text" id="alloc-res-visit-id" class="form-control" placeholder="e.g. VIS-2002" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="alloc-res-patient-id">Patient ID</label>
+                            <input type="text" id="alloc-res-patient-id" class="form-control" placeholder="e.g. P-1002">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="alloc-res-qty">Quantity to Allocate <span class="required">*</span></label>
+                            <input type="number" id="alloc-res-qty" class="form-control" value="1" min="1" max="100" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('allocate-resource-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm Allocation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/resources.js"></script>
+</body>
+</html>

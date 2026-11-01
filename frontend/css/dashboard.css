@@ -1,0 +1,167 @@
+/* =====================================================================
+   GOVERNMENT HOSPITAL RESOURCE ALLOCATION SYSTEM (GHRAS)
+   Dashboard Specific Stylesheet
+   ===================================================================== */
+
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Category Sections */
+.stats-section {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.stats-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.section-title .section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+}
+
+.icon-blue { background-color: var(--primary-light); color: var(--primary); }
+.icon-green { background-color: var(--secondary-light); color: var(--secondary-dark); }
+.icon-yellow { background-color: #fef3c7; color: #b45309; }
+.icon-red { background-color: #fee2e2; color: #b91c1c; }
+
+/* Metrics Cards Row */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+}
+
+.metric-card {
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: #cbd5e1;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.metric-card.card-blue::before { background-color: var(--primary); }
+.metric-card.card-green::before { background-color: var(--secondary); }
+.metric-card.card-yellow::before { background-color: var(--status-yellow); }
+.metric-card.card-red::before { background-color: var(--status-red); }
+
+.metric-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.metric-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    font-feature-settings: "tnum";
+}
+
+.metric-subtext {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Quick Action Banner */
+.action-banner {
+    background: linear-gradient(135deg, #0b63b6 0%, #0fa37f 100%);
+    border-radius: var(--radius-lg);
+    padding: 24px 30px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 24px;
+}
+
+.banner-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.banner-content p {
+    font-size: 13.5px;
+    opacity: 0.9;
+}
+
+.banner-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-white {
+    background-color: #ffffff;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-white:hover {
+    background-color: #f1f5f9;
+}
+
+/* Operational Status Grid */
+.status-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+}

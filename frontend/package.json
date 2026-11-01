@@ -1,0 +1,21 @@
+{
+  "name": "ghras-frontend",
+  "version": "1.0.0",
+  "description": "Government Hospital Resource Allocation System - Frontend Web Portal",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve -s . -l 3000",
+    "dev": "serve -s . -l 3000"
+  },
+  "dependencies": {
+    "serve": "^10.0.2"
+  },
+  "keywords": [
+    "hospital",
+    "resource-allocation",
+    "dijkstra",
+    "healthcare"
+  ],
+  "author": "GHRAS Team",
+  "license": "MIT"
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System History & Audit Logs | GHRAS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/tables.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="hospital-logo">🏥</div>
+                <div class="hospital-title">
+                    <h2>GHRAS PORTAL</h2>
+                    <p>Nalam District GH</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Core Management</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
+                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
+                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
+                
+                <div class="nav-section-title">Resource Inventory</div>
+                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
+                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
+
+                <div class="nav-section-title">Operations & Network</div>
+                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
+                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
+                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
+                <a href="history.html" class="nav-item active"><span class="nav-icon">📜</span> History Logs</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <header class="top-header">
+                <div class="page-headline">
+                    <h1>System Audit & Resource Movement Logs</h1>
+                    <p>Immutable Audit Trail of Resource Allocations, Inventory Consumptions, Releases, and Patient Lifecycle Events</p>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Navigation Tabs -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn btn-primary" id="tab-resources-btn" onclick="switchHistoryTab('resources')">Resource Movement Logs</button>
+                        <button class="btn btn-outline" id="tab-visits-btn" onclick="switchHistoryTab('visits')">Patient Visits Log</button>
+                    </div>
+                    <div>
+                        <input type="text" id="history-search-input" class="form-control" placeholder="Search by Resource / Visit ID..." style="width:260px;">
+                    </div>
+                </div>
+
+                <!-- Section 1: Resource Transaction Logs -->
+                <div id="section-resource-history">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Audit ID</th>
+                                    <th>Resource ID</th>
+                                    <th>Visit ID</th>
+                                    <th>Transaction Type</th>
+                                    <th>Quantity</th>
+                                    <th>Timestamp</th>
+                                    <th>Audit Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resource-history-body">
+                                <tr><td colspan="7" class="empty-state">Loading resource logs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 2: Patient Visits Logs -->
+                <div id="section-visits-history" style="display:none;">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Visit ID</th>
+                                    <th>Patient ID</th>
+                                    <th>Triage Severity</th>
+                                    <th>Category</th>
+                                    <th>Registration Date</th>
+                                    <th>Clinical Symptoms</th>
+                                    <th>Current Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visits-history-body">
+                                <tr><td colspan="7" class="empty-state">Loading patient visits...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/history.js"></script>
+    <script>
+        function switchHistoryTab(tab) {
+            document.getElementById('section-resource-history').style.display = tab === 'resources' ? 'block' : 'none';
+            document.getElementById('section-visits-history').style.display = tab === 'visits' ? 'block' : 'none';
+
+            document.getElementById('tab-resources-btn').className = tab === 'resources' ? 'btn btn-primary' : 'btn btn-outline';
+            document.getElementById('tab-visits-btn').className = tab === 'visits' ? 'btn btn-primary' : 'btn btn-outline';
+        }
+    </script>
+</body>
+</html>

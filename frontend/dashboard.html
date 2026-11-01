@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Dashboard | Government Hospital Resource Allocation System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/tables.css">
+    <link rel="stylesheet" href="css/forms.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="hospital-logo">🏥</div>
+                <div class="hospital-title">
+                    <h2>GHRAS PORTAL</h2>
+                    <p>Nalam District GH</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Core Management</div>
+                <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
+                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
+                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
+                
+                <div class="nav-section-title">Resource Inventory</div>
+                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
+                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
+
+                <div class="nav-section-title">Operations & Network</div>
+                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
+                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
+                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
+                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <header class="top-header">
+                <div class="page-headline">
+                    <h1>Central Command Dashboard</h1>
+                    <p>Real-time district hospital resource tracking and patient allocation</p>
+                </div>
+                <div class="header-actions">
+                    <div class="live-badge">
+                        <span class="live-dot"></span>
+                        Live MySQL Sync
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">DC</div>
+                        <div class="user-info">
+                            <div class="name">Dr. Duty Coordinator</div>
+                            <div class="role">Nalam District HQ</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Quick Action Banner -->
+                <div class="action-banner">
+                    <div class="banner-content">
+                        <h2>Government Hospital Resource Allocation System (GHRAS)</h2>
+                        <p>Managing dynamic patient prioritization, doctor-prescribed treatment plans, and Dijkstra routing across Nalam District.</p>
+                    </div>
+                    <div class="banner-buttons">
+                        <a href="patients.html" class="btn btn-white">+ Register Patient</a>
+                        <a href="doctors.html" class="btn btn-outline" style="color: #fff; border-color: rgba(255,255,255,0.4);">+ Add Doctor</a>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- 1. PATIENT STATISTICS -->
+                    <div class="stats-section">
+                        <div class="stats-section-header">
+                            <div class="section-title">
+                                <div class="section-icon icon-blue">👥</div>
+                                Patient Statistics (Real-Time Intake & Triage)
+                            </div>
+                            <span class="badge badge-info">Database Live</span>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Total Registered</div>
+                                <div class="metric-value" id="stat-total-patients">0</div>
+                                <div class="metric-subtext">Cumulative patient registry</div>
+                            </div>
+                            <div class="metric-card card-red">
+                                <div class="metric-label">Critical Patients</div>
+                                <div class="metric-value" id="stat-critical-patients" style="color: var(--status-red);">0</div>
+                                <div class="metric-subtext">Immediate emergency triage</div>
+                            </div>
+                            <div class="metric-card card-yellow">
+                                <div class="metric-label">Serious Patients</div>
+                                <div class="metric-value" id="stat-serious-patients" style="color: var(--status-yellow);">0</div>
+                                <div class="metric-subtext">Urgent clinical assessment</div>
+                            </div>
+                            <div class="metric-card card-green">
+                                <div class="metric-label">Minor Patients</div>
+                                <div class="metric-value" id="stat-minor-patients" style="color: var(--secondary);">0</div>
+                                <div class="metric-subtext">Standard outpatient care</div>
+                            </div>
+                            <div class="metric-card card-yellow">
+                                <div class="metric-label">Waiting for Consultation</div>
+                                <div class="metric-value" id="stat-waiting-consultation">0</div>
+                                <div class="metric-subtext">In PriorityQueue</div>
+                            </div>
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Under Treatment</div>
+                                <div class="metric-value" id="stat-under-treatment">0</div>
+                                <div class="metric-subtext">Examining / planned</div>
+                            </div>
+                            <div class="metric-card card-red">
+                                <div class="metric-label">Admitted Patients</div>
+                                <div class="metric-value" id="stat-admitted-patients">0</div>
+                                <div class="metric-subtext">Inpatient ward occupancy</div>
+                            </div>
+                            <div class="metric-card card-green">
+                                <div class="metric-label">Discharged / Completed</div>
+                                <div class="metric-value" id="stat-discharged-patients">0</div>
+                                <div class="metric-subtext">Resources released</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. DOCTOR STATISTICS -->
+                    <div class="stats-section">
+                        <div class="stats-section-header">
+                            <div class="section-title">
+                                <div class="section-icon icon-green">👨‍⚕️</div>
+                                Doctor Statistics & Clinical Staff Availability
+                            </div>
+                            <span class="badge badge-available">Duty Roster Active</span>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Total Doctors</div>
+                                <div class="metric-value" id="stat-total-doctors">0</div>
+                                <div class="metric-subtext">Active hospital roster</div>
+                            </div>
+                            <div class="metric-card card-green">
+                                <div class="metric-label">Available Doctors</div>
+                                <div class="metric-value" id="stat-available-doctors" style="color: var(--secondary);">0</div>
+                                <div class="metric-subtext">Ready for consultation</div>
+                            </div>
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Currently Consulting</div>
+                                <div class="metric-value" id="stat-consulting-doctors">0</div>
+                                <div class="metric-subtext">Engaged with patients</div>
+                            </div>
+                            <div class="metric-card card-yellow">
+                                <div class="metric-label">Assigned Inpatient Care</div>
+                                <div class="metric-value" id="stat-assigned-inpatients">0</div>
+                                <div class="metric-subtext">Managing admitted wards</div>
+                            </div>
+                            <div class="metric-card card-red">
+                                <div class="metric-label">Off Duty / On Leave</div>
+                                <div class="metric-value" id="stat-offduty-doctors">0</div>
+                                <div class="metric-subtext">Unavailable for assignments</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. BED STATISTICS -->
+                    <div class="stats-section">
+                        <div class="stats-section-header">
+                            <div class="section-title">
+                                <div class="section-icon icon-yellow">🛏</div>
+                                Bed Statistics & Ward Occupancy
+                            </div>
+                            <span class="badge badge-info">Pessimistic Concurrency Lock</span>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Total Beds</div>
+                                <div class="metric-value" id="stat-total-beds">0</div>
+                                <div class="metric-subtext">H-001 Primary Hospital</div>
+                            </div>
+                            <div class="metric-card card-green">
+                                <div class="metric-label">Available Beds</div>
+                                <div class="metric-value" id="stat-available-beds" style="color: var(--secondary);">0</div>
+                                <div class="metric-subtext">Ready for admission</div>
+                            </div>
+                            <div class="metric-card card-red">
+                                <div class="metric-label">Occupied Beds</div>
+                                <div class="metric-value" id="stat-occupied-beds" style="color: var(--status-red);">0</div>
+                                <div class="metric-subtext">Current active admissions</div>
+                            </div>
+                            <div class="metric-card card-blue">
+                                <div class="metric-label">Available General Beds</div>
+                                <div class="metric-value" id="stat-gen-beds">0</div>
+                                <div class="metric-subtext">Standard medical wards</div>
+                            </div>
+                            <div class="metric-card card-red">
+                                <div class="metric-label">Available ICU Beds</div>
+                                <div class="metric-value" id="stat-icu-beds">0</div>
+                                <div class="metric-subtext">Intensive care telemetry</div>
+                            </div>
+                            <div class="metric-card card-yellow">
+                                <div class="metric-label">Available Emergency Beds</div>
+                                <div class="metric-value" id="stat-emg-beds">0</div>
+                                <div class="metric-subtext">Trauma & resuscitation center</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. OTHER RESOURCE & REFERRAL STATISTICS -->
+                    <div class="status-grid">
+                        <div class="stats-section">
+                            <div class="stats-section-header">
+                                <div class="section-title">
+                                    <div class="section-icon icon-blue">📦</div>
+                                    Medical Resource Inventory & Diagnostic Stock
+                                </div>
+                                <span class="badge badge-available">Dynamic Reserves</span>
+                            </div>
+                            <div class="metrics-row">
+                                <div class="metric-card card-blue">
+                                    <div class="metric-label">Available Equipment</div>
+                                    <div class="metric-value" id="stat-avail-equipment">0</div>
+                                    <div class="metric-subtext">Oxygen, Ventilators, Monitors</div>
+                                </div>
+                                <div class="metric-card card-green">
+                                    <div class="metric-label">Diagnostic Services</div>
+                                    <div class="metric-value" id="stat-avail-diagnostics">0</div>
+                                    <div class="metric-subtext">Operational in-house tests</div>
+                                </div>
+                                <div class="metric-card card-blue">
+                                    <div class="metric-label">Consumable Supplies</div>
+                                    <div class="metric-value" id="stat-supply-stock">0</div>
+                                    <div class="metric-subtext">IV Fluids, Syringes, Kits</div>
+                                </div>
+                                <div class="metric-card card-yellow">
+                                    <div class="metric-label">Pending Requests</div>
+                                    <div class="metric-value" id="stat-pending-requests">0</div>
+                                    <div class="metric-subtext">Resource Allocation Queue</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-section">
+                            <div class="stats-section-header">
+                                <div class="section-title">
+                                    <div class="section-icon icon-red">🚑</div>
+                                    Referral Network (Dijkstra's Algorithm)
+                                </div>
+                                <span class="badge badge-info">10 Locations</span>
+                            </div>
+                            <div class="metrics-row" style="grid-template-columns: 1fr;">
+                                <div class="metric-card card-blue">
+                                    <div class="metric-label">Total Referrals</div>
+                                    <div class="metric-value" id="stat-total-referrals">0</div>
+                                    <div class="metric-subtext">Transfers to specialized centers</div>
+                                </div>
+                                <div class="metric-card card-green">
+                                    <div class="metric-label">Completed / Confirmed</div>
+                                    <div class="metric-value" id="stat-completed-referrals" style="color: var(--secondary);">0</div>
+                                    <div class="metric-subtext">Fastest route executed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
