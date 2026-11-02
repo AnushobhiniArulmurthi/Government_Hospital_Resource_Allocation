@@ -3,279 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central Dashboard | Government Hospital Resource Allocation System</title>
-    <meta http-equiv="refresh" content="0; url=doctors.html">
+    <title>Dashboard | Government Hospital Resource Allocation System</title>
+    <meta name="description" content="GHRAS Command Centre – Real-time hospital resource utilization, patient acuity overview, bed occupancy, and operational status for Nalam District Government Hospital.">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/tables.css">
     <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/tables.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================
+           DASHBOARD-SPECIFIC STYLES
+        ========================================== */
+        :root {
+            --dashboard-bg: #f0f4f8;
+        }
+
+        .content-body {
+            background: var(--dashboard-bg);
+            min-height: 100vh;
+        }
+
+        /* Hero Welcome Banner */
+        .dashboard-hero {
+            background: linear-gradient(135deg, #0b63b6 0%, #0ea5e9 60%, #38bdf8 100%);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(11, 99, 182, 0.3);
+        }
+        .dashboard-hero::before {
+            content: '🏥';
+            font-size: 180px;
+            position: absolute;
+            right: -20px;
+            top: -30px;
+            opacity: 0.08;
+            line-height: 1;
+        }
+        .dashboard-hero h2 {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0 0 6px 0;
+            color: #fff;
+        }
+        .dashboard-hero p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .hero-live-badge {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 24px;
+            padding: 6px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 0 3px rgba(74,222,128,0.3);
+            animation: pulse-dot 1.5s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.25); opacity: 0.7; }
+        }
+
+        /* KPI Cards Grid */
+        .kpi-mega-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1200px) { .kpi-mega-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px)  { .kpi-mega-grid { grid-template-columns: 1fr; } }
+
+        .kpi-card-v2 {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card-v2:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .kpi-card-v2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 0 0 14px 14px;
+        }
+        .kpi-card-v2.card-blue::after   { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+        .kpi-card-v2.card-green::after  { background: linear-gradient(90deg, #22c55e, #84cc16); }
+        .kpi-card-v2.card-red::after    { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .kpi-card-v2.card-amber::after  { background: linear-gradient(90deg, #f59e0b, #eab308); }
+        .kpi-card-v2.card-purple::after { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+        .kpi-card-v2.card-teal::after   { background: linear-gradient(90deg, #14b8a6, #06b6d4); }
+        .kpi-card-v2.card-indigo::after { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+        .kpi-card-v2.card-rose::after   { background: linear-gradient(90deg, #f43f5e, #e11d48); }
+
+        .kpi-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .kpi-icon-v2 {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .kpi-number {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1;
+            color: #0f172a;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+        .kpi-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 10px;
+        }
+        .kpi-sub-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+        .kpi-sub-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Progress Bar */
+        .prog-bar-wrapper {
+            margin-top: 8px;
+        }
+        .prog-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        .prog-bar-track {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .prog-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        /* Section Heading */
+        .section-heading {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Module Quick Action Cards */
+        .module-links-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 1100px) { .module-links-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px)  { .module-links-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .module-link-card {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 16px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            display: block;
+        }
+        .module-link-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(11,99,182,0.15);
+        }
+        .module-link-card .module-emoji {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .module-link-card .module-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .module-link-card .module-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Acuity Distribution Bar */
+        .acuity-bar-section {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .acuity-bar {
+            display: flex;
+            height: 28px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0 12px 0;
+        }
+        .acuity-segment {
+            transition: flex-basis 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .acuity-legend {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .acuity-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .acuity-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Two column layout for bottom section */
+        .dashboard-bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) { .dashboard-bottom-grid { grid-template-columns: 1fr; } }
+
+        .dash-panel {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .dash-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dash-panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .dash-panel-body {
+            padding: 16px 20px;
+        }
+
+        /* Bed occupancy grid */
+        .bed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+            gap: 8px;
+        }
+        .bed-cell {
+            border-radius: 8px;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1.5px solid;
+        }
+        .bed-cell.available {
+            background: #ecfdf5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+        .bed-cell.occupied {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+        .bed-cell-id {
+            font-size: 10px;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        /* Admitted patients mini list */
+        .admitted-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .admitted-item:last-child { border-bottom: none; }
+
+        /* Stat rows for resource summary */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 13px;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-row-label { color: #475569; font-weight: 600; }
+        .stat-row-val   { font-weight: 800; color: #0f172a; }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: 6 modules (Dashboard first) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="hospital-logo">🏥</div>
                 <div class="hospital-title">
                     <h2>GHRAS PORTAL</h2>
-                    <p>Nalam District GH</p>
+                    <p>Government Hospital System</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Core Management</div>
+                <div class="nav-section-title">Hospital Modules</div>
                 <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
-                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
-                <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
-                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
-                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
-                
-                <div class="nav-section-title">Resource Inventory</div>
-                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
-                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
-                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
-
-                <div class="nav-section-title">Operations & Network</div>
-                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
-                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
-                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
-                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
-                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
-                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+                <a href="doctors.html"   class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
+                <a href="patients.html"  class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Available Resources</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referral Hospitals</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge Summary</a>
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Content -->
         <main class="main-wrapper">
             <header class="top-header">
                 <div class="page-headline">
-                    <h1>Central Command Dashboard</h1>
-                    <p>Real-time district hospital resource tracking and patient allocation</p>
+                    <h1>Hospital Command Dashboard</h1>
+                    <p>Real-time overview of clinical acuity, bed occupancy, resource allocation, and active admissions</p>
                 </div>
                 <div class="header-actions">
-                    <div class="live-badge">
-                        <span class="live-dot"></span>
-                        Live MySQL Sync
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar">DC</div>
-                        <div class="user-info">
-                            <div class="name">Dr. Duty Coordinator</div>
-                            <div class="role">Nalam District HQ</div>
-                        </div>
-                    </div>
+                    <button class="btn btn-outline" onclick="loadDashboard()">
+                        🔄 Refresh
+                    </button>
+                    <div id="last-updated" class="cell-muted" style="font-size:11.5px; display:flex; align-items:center;"></div>
                 </div>
             </header>
 
-            <div class="content-body">
-                <!-- Quick Action Banner -->
-                <div class="action-banner">
-                    <div class="banner-content">
-                        <h2>Government Hospital Resource Allocation System (GHRAS)</h2>
-                        <p>Managing dynamic patient prioritization, doctor-prescribed treatment plans, and Dijkstra routing across Nalam District.</p>
+            <div class="content-body" style="padding: 0 24px 24px;">
+                <!-- Hero Welcome Section -->
+                <div class="dashboard-hero">
+                    <div>
+                        <h2>Nalam District Government Headquarters Hospital</h2>
+                        <p>Hospital ID: H-001 &nbsp;|&nbsp; Hospital Road, Nalam Central, Nalam District</p>
+                        <p style="margin-top:6px; font-size:12.5px; opacity:0.8;">
+                            📞 +91-4362-230001 &nbsp;|&nbsp; 60 Total Bed Capacity &nbsp;|&nbsp; Serves Nalam & Surrounding Districts
+                        </p>
                     </div>
-                    <div class="banner-buttons">
-                        <a href="patients.html" class="btn btn-white">+ Register Patient</a>
-                        <a href="doctors.html" class="btn btn-outline" style="color: #fff; border-color: rgba(255,255,255,0.4);">+ Add Doctor</a>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                        <div class="hero-live-badge">
+                            <div class="live-dot"></div>
+                            LIVE OPERATIONS
+                        </div>
+                        <div id="hero-time" style="font-size:13px; opacity:0.85; font-weight:600;"></div>
                     </div>
                 </div>
 
-                <div class="dashboard-grid">
-                    <!-- 1. PATIENT STATISTICS -->
-                    <div class="stats-section">
-                        <div class="stats-section-header">
-                            <div class="section-title">
-                                <div class="section-icon icon-blue">👥</div>
-                                Patient Statistics (Real-Time Intake & Triage)
+                <!-- ========================================
+                     SECTION 1: CORE KPI MEGA GRID
+                ======================================== -->
+                <h2 class="section-heading" style="margin-bottom:16px;">
+                    <span>📊</span> Hospital Operational Statistics
+                </h2>
+                <div class="kpi-mega-grid">
+                    <!-- Total Patients -->
+                    <div class="kpi-card-v2 card-blue">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-total-patients">–</div>
+                                <div class="kpi-title">Total Registered Patients</div>
                             </div>
-                            <span class="badge badge-info">Database Live</span>
+                            <div class="kpi-icon-v2" style="background:#dbeafe; color:#1d4ed8;">👥</div>
                         </div>
-                        <div class="metrics-row">
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Total Registered</div>
-                                <div class="metric-value" id="stat-total-patients">0</div>
-                                <div class="metric-subtext">Cumulative patient registry</div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#22c55e;"></div><span id="kpi-admitted">–</span> Admitted</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#94a3b8;"></div><span id="kpi-discharged">–</span> Discharged</div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Acuity -->
+                    <div class="kpi-card-v2 card-red">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-critical" style="color:#dc2626;">–</div>
+                                <div class="kpi-title">Critical Acuity Patients</div>
                             </div>
-                            <div class="metric-card card-red">
-                                <div class="metric-label">Critical Patients</div>
-                                <div class="metric-value" id="stat-critical-patients" style="color: var(--status-red);">0</div>
-                                <div class="metric-subtext">Immediate emergency triage</div>
+                            <div class="kpi-icon-v2" style="background:#fee2e2; color:#dc2626;">🚨</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#f59e0b;"></div><span id="kpi-serious">–</span> Serious</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#22c55e;"></div><span id="kpi-minor">–</span> Normal</div>
+                        </div>
+                    </div>
+
+                    <!-- Beds -->
+                    <div class="kpi-card-v2 card-green">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-avail-beds" style="color:#15803d;">–</div>
+                                <div class="kpi-title">Available Beds</div>
                             </div>
-                            <div class="metric-card card-yellow">
-                                <div class="metric-label">Serious Patients</div>
-                                <div class="metric-value" id="stat-serious-patients" style="color: var(--status-yellow);">0</div>
-                                <div class="metric-subtext">Urgent clinical assessment</div>
+                            <div class="kpi-icon-v2" style="background:#dcfce7; color:#15803d;">🛏</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#ef4444;"></div><span id="kpi-occ-beds">–</span> Occupied</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#64748b;"></div><span id="kpi-total-beds">–</span> Total</div>
+                        </div>
+                    </div>
+
+                    <!-- Doctors -->
+                    <div class="kpi-card-v2 card-purple">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-total-docs" style="color:#7c3aed;">–</div>
+                                <div class="kpi-title">Registered Doctors</div>
                             </div>
-                            <div class="metric-card card-green">
-                                <div class="metric-label">Minor Patients</div>
-                                <div class="metric-value" id="stat-minor-patients" style="color: var(--secondary);">0</div>
-                                <div class="metric-subtext">Standard outpatient care</div>
+                            <div class="kpi-icon-v2" style="background:#ede9fe; color:#7c3aed;">👨‍⚕️</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#22c55e;"></div><span id="kpi-onduty-docs">–</span> On Duty</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#ef4444;"></div><span id="kpi-offduty-docs">–</span> Off Duty</div>
+                        </div>
+                    </div>
+
+                    <!-- General Beds -->
+                    <div class="kpi-card-v2 card-teal">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-gen-beds" style="color:#0f766e;">–</div>
+                                <div class="kpi-title">Available General Beds</div>
                             </div>
-                            <div class="metric-card card-yellow">
-                                <div class="metric-label">Waiting for Consultation</div>
-                                <div class="metric-value" id="stat-waiting-consultation">0</div>
-                                <div class="metric-subtext">In PriorityQueue</div>
+                            <div class="kpi-icon-v2" style="background:#ccfbf1; color:#0f766e;">🏥</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#f97316;"></div><span id="kpi-icu-beds">–</span> ICU Available</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#ef4444;"></div><span id="kpi-emg-beds">–</span> Emergency</div>
+                        </div>
+                    </div>
+
+                    <!-- Referrals -->
+                    <div class="kpi-card-v2 card-amber">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-total-refs" style="color:#b45309;">–</div>
+                                <div class="kpi-title">Total Referrals Issued</div>
                             </div>
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Under Treatment</div>
-                                <div class="metric-value" id="stat-under-treatment">0</div>
-                                <div class="metric-subtext">Examining / planned</div>
+                            <div class="kpi-icon-v2" style="background:#fef3c7; color:#b45309;">🚑</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#f97316;"></div><span id="kpi-pending-refs">–</span> Pending Approval</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#22c55e;"></div><span id="kpi-done-refs">–</span> Completed</div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Supplies -->
+                    <div class="kpi-card-v2 card-indigo">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-avail-eq" style="color:#4338ca;">–</div>
+                                <div class="kpi-title">Equipment Available</div>
                             </div>
-                            <div class="metric-card card-red">
-                                <div class="metric-label">Admitted Patients</div>
-                                <div class="metric-value" id="stat-admitted-patients">0</div>
-                                <div class="metric-subtext">Inpatient ward occupancy</div>
+                            <div class="kpi-icon-v2" style="background:#e0e7ff; color:#4338ca;">🩺</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#06b6d4;"></div><span id="kpi-diag-svc">–</span> Diagnostic Svcs</div>
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#8b5cf6;"></div><span id="kpi-supply-stock">–</span> Supply Units</div>
+                        </div>
+                    </div>
+
+                    <!-- Waiting Queue -->
+                    <div class="kpi-card-v2 card-rose">
+                        <div class="kpi-top">
+                            <div>
+                                <div class="kpi-number" id="kpi-queue-count" style="color:#be123c;">–</div>
+                                <div class="kpi-title">Priority Waiting Queue</div>
                             </div>
-                            <div class="metric-card card-green">
-                                <div class="metric-label">Discharged / Completed</div>
-                                <div class="metric-value" id="stat-discharged-patients">0</div>
-                                <div class="metric-subtext">Resources released</div>
+                            <div class="kpi-icon-v2" style="background:#ffe4e6; color:#be123c;">⏳</div>
+                        </div>
+                        <div class="kpi-sub">
+                            <div class="kpi-sub-item"><div class="kpi-sub-dot" style="background:#94a3b8;"></div>Auto-allocated on discharge</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                     SECTION 2: PATIENT ACUITY DISTRIBUTION
+                ======================================== -->
+                <div class="acuity-bar-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <h2 class="section-heading" style="margin:0;">
+                            <span>📊</span> Patient Acuity Distribution
+                        </h2>
+                        <span class="cell-muted" style="font-size:12px;">Based on current registered patients</span>
+                    </div>
+
+                    <div class="acuity-bar" id="acuity-bar">
+                        <div class="acuity-segment" id="acuity-seg-critical" style="background:#ef4444; flex-basis:20%;"></div>
+                        <div class="acuity-segment" id="acuity-seg-serious"  style="background:#f59e0b; flex-basis:30%;"></div>
+                        <div class="acuity-segment" id="acuity-seg-normal"   style="background:#22c55e; flex-basis:50%;"></div>
+                    </div>
+
+                    <div class="acuity-legend">
+                        <div class="acuity-legend-item">
+                            <div class="acuity-dot" style="background:#ef4444;"></div>
+                            Critical — <strong id="legend-critical">–</strong> patients (<span id="legend-critical-pct">–</span>%)
+                        </div>
+                        <div class="acuity-legend-item">
+                            <div class="acuity-dot" style="background:#f59e0b;"></div>
+                            Serious — <strong id="legend-serious">–</strong> patients (<span id="legend-serious-pct">–</span>%)
+                        </div>
+                        <div class="acuity-legend-item">
+                            <div class="acuity-dot" style="background:#22c55e;"></div>
+                            Normal — <strong id="legend-normal">–</strong> patients (<span id="legend-normal-pct">–</span>%)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                     SECTION 3: BED OCCUPANCY + ADMITTED LIST
+                ======================================== -->
+                <div class="dashboard-bottom-grid">
+                    <!-- Live Bed Map -->
+                    <div class="dash-panel">
+                        <div class="dash-panel-header">
+                            <h3 class="dash-panel-title"><span>🛏</span> Live Bed Occupancy Map</h3>
+                            <a href="resources.html" style="font-size:12px; color:var(--primary); font-weight:600; text-decoration:none;">View All →</a>
+                        </div>
+                        <div class="dash-panel-body">
+                            <div style="display:flex; gap:14px; margin-bottom:14px; flex-wrap:wrap;">
+                                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;">
+                                    <div style="width:14px; height:14px; background:#dcfce7; border:1.5px solid #6ee7b7; border-radius:3px;"></div>Available
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;">
+                                    <div style="width:14px; height:14px; background:#fef2f2; border:1.5px solid #fca5a5; border-radius:3px;"></div>Occupied
+                                </div>
+                            </div>
+                            <div id="bed-map-container" class="bed-grid">
+                                <div class="empty-state" style="grid-column: 1/-1;">Loading beds...</div>
+                            </div>
+                            <div style="margin-top:16px;">
+                                <div class="prog-bar-label">
+                                    <span>Bed Utilization Rate</span>
+                                    <span id="bed-util-pct">–%</span>
+                                </div>
+                                <div class="prog-bar-track">
+                                    <div id="bed-util-bar" class="prog-bar-fill" style="width:0%; background:linear-gradient(90deg,#22c55e,#ef4444);"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 2. DOCTOR STATISTICS -->
-                    <div class="stats-section">
-                        <div class="stats-section-header">
-                            <div class="section-title">
-                                <div class="section-icon icon-green">👨‍⚕️</div>
-                                Doctor Statistics & Clinical Staff Availability
-                            </div>
-                            <span class="badge badge-available">Duty Roster Active</span>
+                    <!-- Currently Admitted Patients -->
+                    <div class="dash-panel">
+                        <div class="dash-panel-header">
+                            <h3 class="dash-panel-title"><span>🏥</span> Currently Admitted Inpatients</h3>
+                            <a href="discharge.html" style="font-size:12px; color:var(--primary); font-weight:600; text-decoration:none;">Discharge →</a>
                         </div>
-                        <div class="metrics-row">
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Total Doctors</div>
-                                <div class="metric-value" id="stat-total-doctors">0</div>
-                                <div class="metric-subtext">Active hospital roster</div>
-                            </div>
-                            <div class="metric-card card-green">
-                                <div class="metric-label">Available Doctors</div>
-                                <div class="metric-value" id="stat-available-doctors" style="color: var(--secondary);">0</div>
-                                <div class="metric-subtext">Ready for consultation</div>
-                            </div>
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Currently Consulting</div>
-                                <div class="metric-value" id="stat-consulting-doctors">0</div>
-                                <div class="metric-subtext">Engaged with patients</div>
-                            </div>
-                            <div class="metric-card card-yellow">
-                                <div class="metric-label">Assigned Inpatient Care</div>
-                                <div class="metric-value" id="stat-assigned-inpatients">0</div>
-                                <div class="metric-subtext">Managing admitted wards</div>
-                            </div>
-                            <div class="metric-card card-red">
-                                <div class="metric-label">Off Duty / On Leave</div>
-                                <div class="metric-value" id="stat-offduty-doctors">0</div>
-                                <div class="metric-subtext">Unavailable for assignments</div>
-                            </div>
+                        <div class="dash-panel-body" id="admitted-list-container">
+                            <div class="empty-state">Loading admitted patients...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                     SECTION 4: RESOURCE SUMMARY + REFERRALS
+                ======================================== -->
+                <div class="dashboard-bottom-grid">
+                    <!-- Resource Inventory Summary -->
+                    <div class="dash-panel">
+                        <div class="dash-panel-header">
+                            <h3 class="dash-panel-title"><span>📦</span> Hospital Resource Summary</h3>
+                            <a href="resources.html" style="font-size:12px; color:var(--primary); font-weight:600; text-decoration:none;">Full Inventory →</a>
+                        </div>
+                        <div class="dash-panel-body" id="resource-summary-container">
+                            <div class="empty-state">Loading resources...</div>
                         </div>
                     </div>
 
-                    <!-- 3. BED STATISTICS -->
-                    <div class="stats-section">
-                        <div class="stats-section-header">
-                            <div class="section-title">
-                                <div class="section-icon icon-yellow">🛏</div>
-                                Bed Statistics & Ward Occupancy
-                            </div>
-                            <span class="badge badge-info">Pessimistic Concurrency Lock</span>
+                    <!-- Referral Hospital Network Overview -->
+                    <div class="dash-panel">
+                        <div class="dash-panel-header">
+                            <h3 class="dash-panel-title"><span>🚑</span> Referral Network Status</h3>
+                            <a href="referrals.html" style="font-size:12px; color:var(--primary); font-weight:600; text-decoration:none;">View All →</a>
                         </div>
-                        <div class="metrics-row">
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Total Beds</div>
-                                <div class="metric-value" id="stat-total-beds">0</div>
-                                <div class="metric-subtext">H-001 Primary Hospital</div>
-                            </div>
-                            <div class="metric-card card-green">
-                                <div class="metric-label">Available Beds</div>
-                                <div class="metric-value" id="stat-available-beds" style="color: var(--secondary);">0</div>
-                                <div class="metric-subtext">Ready for admission</div>
-                            </div>
-                            <div class="metric-card card-red">
-                                <div class="metric-label">Occupied Beds</div>
-                                <div class="metric-value" id="stat-occupied-beds" style="color: var(--status-red);">0</div>
-                                <div class="metric-subtext">Current active admissions</div>
-                            </div>
-                            <div class="metric-card card-blue">
-                                <div class="metric-label">Available General Beds</div>
-                                <div class="metric-value" id="stat-gen-beds">0</div>
-                                <div class="metric-subtext">Standard medical wards</div>
-                            </div>
-                            <div class="metric-card card-red">
-                                <div class="metric-label">Available ICU Beds</div>
-                                <div class="metric-value" id="stat-icu-beds">0</div>
-                                <div class="metric-subtext">Intensive care telemetry</div>
-                            </div>
-                            <div class="metric-card card-yellow">
-                                <div class="metric-label">Available Emergency Beds</div>
-                                <div class="metric-value" id="stat-emg-beds">0</div>
-                                <div class="metric-subtext">Trauma & resuscitation center</div>
-                            </div>
+                        <div class="dash-panel-body" id="referral-summary-container">
+                            <div class="empty-state">Loading referrals...</div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 4. OTHER RESOURCE & REFERRAL STATISTICS -->
-                    <div class="status-grid">
-                        <div class="stats-section">
-                            <div class="stats-section-header">
-                                <div class="section-title">
-                                    <div class="section-icon icon-blue">📦</div>
-                                    Medical Resource Inventory & Diagnostic Stock
-                                </div>
-                                <span class="badge badge-available">Dynamic Reserves</span>
-                            </div>
-                            <div class="metrics-row">
-                                <div class="metric-card card-blue">
-                                    <div class="metric-label">Available Equipment</div>
-                                    <div class="metric-value" id="stat-avail-equipment">0</div>
-                                    <div class="metric-subtext">Oxygen, Ventilators, Monitors</div>
-                                </div>
-                                <div class="metric-card card-green">
-                                    <div class="metric-label">Diagnostic Services</div>
-                                    <div class="metric-value" id="stat-avail-diagnostics">0</div>
-                                    <div class="metric-subtext">Operational in-house tests</div>
-                                </div>
-                                <div class="metric-card card-blue">
-                                    <div class="metric-label">Consumable Supplies</div>
-                                    <div class="metric-value" id="stat-supply-stock">0</div>
-                                    <div class="metric-subtext">IV Fluids, Syringes, Kits</div>
-                                </div>
-                                <div class="metric-card card-yellow">
-                                    <div class="metric-label">Pending Requests</div>
-                                    <div class="metric-value" id="stat-pending-requests">0</div>
-                                    <div class="metric-subtext">Resource Allocation Queue</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="stats-section">
-                            <div class="stats-section-header">
-                                <div class="section-title">
-                                    <div class="section-icon icon-red">🚑</div>
-                                    Referral Network (Dijkstra's Algorithm)
-                                </div>
-                                <span class="badge badge-info">10 Locations</span>
-                            </div>
-                            <div class="metrics-row" style="grid-template-columns: 1fr;">
-                                <div class="metric-card card-blue">
-                                    <div class="metric-label">Total Referrals</div>
-                                    <div class="metric-value" id="stat-total-referrals">0</div>
-                                    <div class="metric-subtext">Transfers to specialized centers</div>
-                                </div>
-                                <div class="metric-card card-green">
-                                    <div class="metric-label">Completed / Confirmed</div>
-                                    <div class="metric-value" id="stat-completed-referrals" style="color: var(--secondary);">0</div>
-                                    <div class="metric-subtext">Fastest route executed</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- ========================================
+                     SECTION 5: MODULE QUICK ACCESS CARDS
+                ======================================== -->
+                <h2 class="section-heading">
+                    <span>⚡</span> Quick Access — Hospital Modules
+                </h2>
+                <div class="module-links-grid">
+                    <a href="doctors.html" class="module-link-card">
+                        <span class="module-emoji">👨‍⚕️</span>
+                        <span class="module-name">Doctors Module</span>
+                        <span class="module-desc">Search patients, prescribe resources, register doctors</span>
+                    </a>
+                    <a href="patients.html" class="module-link-card">
+                        <span class="module-emoji">👥</span>
+                        <span class="module-name">Patients Module</span>
+                        <span class="module-desc">Register patients, view acuity and conditions</span>
+                    </a>
+                    <a href="resources.html" class="module-link-card">
+                        <span class="module-emoji">📦</span>
+                        <span class="module-name">Available Resources</span>
+                        <span class="module-desc">Live bed & equipment inventory, waiting queue</span>
+                    </a>
+                    <a href="referrals.html" class="module-link-card">
+                        <span class="module-emoji">🚑</span>
+                        <span class="module-name">Referral Hospitals</span>
+                        <span class="module-desc">Dijkstra routing, approve inter-hospital transfers</span>
+                    </a>
+                    <a href="discharge.html" class="module-link-card">
+                        <span class="module-emoji">📤</span>
+                        <span class="module-name">Discharge Summary</span>
+                        <span class="module-desc">Discharge admitted patients, release resources</span>
+                    </a>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script src="js/dashboard.js"></script>

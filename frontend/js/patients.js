@@ -86,9 +86,10 @@ function filterPatients() {
         // Search match
         const matchesQuery = !query ||
             p.patientId.toLowerCase().includes(query) ||
-            p.patientName.toLowerCase().includes(query) ||
+            (p.fullName || p.patientName || '').toLowerCase().includes(query) ||
             (p.contactNumber && p.contactNumber.includes(query)) ||
-            (p.reportedCondition && p.reportedCondition.toLowerCase().includes(query));
+            (p.reportedCondition && p.reportedCondition.toLowerCase().includes(query)) ||
+            (p.medicalCondition && p.medicalCondition.toLowerCase().includes(query));
 
         return matchesSeverity && matchesQuery;
     });
@@ -116,7 +117,7 @@ function renderPatientsTable(patients) {
             <tr>
                 <td><strong>${p.patientId}</strong></td>
                 <td>
-                    <div style="font-weight:700; color:var(--text-primary); font-size:14px;">${p.patientName}</div>
+                    <div style="font-weight:700; color:var(--text-primary); font-size:14px;">${p.fullName || p.patientName || 'Unknown'}</div>
                     <div class="cell-muted" style="font-size:11px;">Citizen Record</div>
                 </td>
                 <td>

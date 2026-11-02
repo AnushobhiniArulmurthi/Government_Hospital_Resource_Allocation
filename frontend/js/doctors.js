@@ -112,10 +112,10 @@ function renderPatientSearchResults(patients) {
         <div class="patient-search-item" onclick="selectPatientById('${p.patientId}')">
             <div>
                 <div style="font-weight:700; color:var(--text-primary); font-size:14px;">
-                    ${p.patientName} <span style="font-size:12px; color:var(--primary); font-weight:600;">(${p.patientId})</span>
+                    ${p.fullName || p.patientName || 'Unknown'} <span style="font-size:12px; color:var(--primary); font-weight:600;">(${p.patientId})</span>
                 </div>
                 <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
-                    ${p.age ? p.age + ' yrs' : '-'} / ${p.gender || '-'} | Condition: <strong>${p.reportedCondition || 'None'}</strong>
+                    ${p.age ? p.age + ' yrs' : '-'} / ${p.gender || '-'} | Condition: <strong>${p.reportedCondition || p.medicalCondition || 'None'}</strong>
                 </div>
             </div>
             <div>
@@ -137,7 +137,7 @@ async function loadQuickPatients() {
         const samplePatients = patients.slice(0, 5);
         quickContainer.innerHTML = samplePatients.map(p => `
             <button type="button" class="btn btn-outline" style="padding:4px 10px; font-size:11.5px; border-radius:20px;" onclick="selectPatientById('${p.patientId}')">
-                👤 ${p.patientId} - ${p.patientName} (${p.severity || 'Normal'})
+                👤 ${p.patientId} - ${p.fullName || p.patientName || 'Patient'} (${p.severity || 'Normal'})
             </button>
         `).join('');
     } catch (e) {
@@ -172,11 +172,12 @@ function selectPatient(p) {
     if (resultsContainer) resultsContainer.style.display = 'none';
 
     // Populate search input with name
+    const patientDisplayName = p.fullName || p.patientName || 'Unknown Patient';
     const searchInput = document.getElementById('patient-search-input');
-    if (searchInput) searchInput.value = `${p.patientId} - ${p.patientName}`;
+    if (searchInput) searchInput.value = `${p.patientId} - ${patientDisplayName}`;
 
     // Fill details card
-    document.getElementById('card-patient-name').textContent = p.patientName;
+    document.getElementById('card-patient-name').textContent = patientDisplayName;
     document.getElementById('card-patient-id').textContent = p.patientId;
     document.getElementById('card-patient-age-gender').textContent = `${p.age ? p.age + ' Years' : 'Age -'} / ${p.gender || '-'}`;
     document.getElementById('card-patient-contact').textContent = p.contactNumber || 'N/A';
