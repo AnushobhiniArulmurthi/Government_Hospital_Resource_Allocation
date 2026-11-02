@@ -30,6 +30,23 @@ public class ReferralController {
         return ApiResponse.ok(referralService.getAllReferrals());
     }
 
+    @GetMapping("/details")
+    public ApiResponse<List<com.hospital.resourceallocation.dto.ReferralDetailDTO>> getEnrichedReferrals() {
+        return ApiResponse.ok(referralService.getEnrichedReferrals());
+    }
+
+    @PostMapping("/{id}/approve")
+    public ApiResponse<Referral> approveReferral(@PathVariable String id) {
+        Referral approved = referralService.approveReferral(id);
+        return ApiResponse.ok("Referral " + id + " verified and approved for inter-hospital transfer dispatch.", approved);
+    }
+
+    @PostMapping("/{id}/move-to-waiting-queue")
+    public ApiResponse<String> moveReferralToWaitingQueue(@PathVariable String id) {
+        referralService.moveReferralToWaitingQueue(id);
+        return ApiResponse.ok("Patient from referral " + id + " moved to Severity-Based Priority Queue.", "Moved to queue successfully");
+    }
+
     @GetMapping("/hospitals")
     public ApiResponse<List<Hospital>> getAllHospitals() {
         return ApiResponse.ok(referralService.getAllHospitals());

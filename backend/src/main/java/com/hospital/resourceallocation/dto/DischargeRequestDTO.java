@@ -8,11 +8,15 @@ import java.util.List;
 public class DischargeRequestDTO {
 
     private String visitId;
+    private String patientId;
     private String dischargeSummary;
     private String followUpInstructions;
     private List<String> consumablesUsed;
 
     public DischargeRequestDTO() {}
+
+    public String getPatientId() { return patientId; }
+    public void setPatientId(String patientId) { this.patientId = patientId; }
 
     public String getVisitId() { return visitId; }
     public void setVisitId(String visitId) { this.visitId = visitId; }

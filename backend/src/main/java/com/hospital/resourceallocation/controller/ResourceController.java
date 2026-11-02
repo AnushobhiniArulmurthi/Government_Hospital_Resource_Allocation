@@ -35,6 +35,12 @@ public class ResourceController {
         return ApiResponse.ok(resourceService.getResourcesByHospital(hospitalId));
     }
 
+    @GetMapping("/all-combined")
+    public ApiResponse<List<com.hospital.resourceallocation.dto.UnifiedResourceItemDTO>> getAllCombinedResources(
+            @RequestParam(defaultValue = "H-001") String hospitalId) {
+        return ApiResponse.ok(resourceService.getAllCombinedResources(hospitalId));
+    }
+
     @GetMapping("/category/{category}")
     public ApiResponse<List<Resource>> getByCategory(@PathVariable String category,
                                                      @RequestParam(defaultValue = "H-001") String hospitalId) {

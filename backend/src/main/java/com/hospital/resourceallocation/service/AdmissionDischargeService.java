@@ -27,6 +27,7 @@ public class AdmissionDischargeService {
     private final DischargeHistoryRepository dischargeHistoryRepository;
     private final ResourceHistoryRepository resourceHistoryRepository;
     private final WaitingQueueService waitingQueueService;
+    private final com.hospital.resourceallocation.repository.PatientRepository patientRepository;
 
     @Autowired
     public AdmissionDischargeService(AdmissionRepository admissionRepository,
@@ -37,7 +38,8 @@ public class AdmissionDischargeService {
                                      ResourceAllocationRepository allocationRepository,
                                      DischargeHistoryRepository dischargeHistoryRepository,
                                      ResourceHistoryRepository resourceHistoryRepository,
-                                     WaitingQueueService waitingQueueService) {
+                                     WaitingQueueService waitingQueueService,
+                                     com.hospital.resourceallocation.repository.PatientRepository patientRepository) {
         this.admissionRepository = admissionRepository;
         this.patientVisitRepository = patientVisitRepository;
         this.bedRepository = bedRepository;
@@ -47,6 +49,7 @@ public class AdmissionDischargeService {
         this.dischargeHistoryRepository = dischargeHistoryRepository;
         this.resourceHistoryRepository = resourceHistoryRepository;
         this.waitingQueueService = waitingQueueService;
+        this.patientRepository = patientRepository;
     }
 
     /**
@@ -116,11 +119,25 @@ public class AdmissionDischargeService {
      */
     @Transactional
     public DischargeHistory dischargePatient(DischargeRequestDTO dto) {
-        PatientVisit visit = patientVisitRepository.findById(dto.getVisitId())
-                .orElseThrow(() -> new IllegalArgumentException("Visit not found: " + dto.getVisitId()));
+        PatientVisit visit = null;
+        if (dto.getVisitId() != null && !dto.getVisitId().trim().isEmpty()) {
+            visit = patientVisitRepository.findById(dto.getVisitId().trim()).orElse(null);
+        }
+        if (visit == null && dto.getPatientId() != null && !dto.getPatientId().trim().isEmpty()) {
+            List<Admission> active = admissionRepository.findByPatientIdAndStatus(dto.getPatientId().trim(), "ACTIVE");
+            if (!active.isEmpty()) {
+                visit = patientVisitRepository.findById(active.get(0).getVisitId()).orElse(null);
+            }
+        }
 
-        Admission admission = admissionRepository.findByVisitId(dto.getVisitId())
-                .orElse(null);
+        if (visit == null) {
+            throw new IllegalArgumentException("Admitted patient or visit not found for: " + (dto.getPatientId() != null ? dto.getPatientId() : dto.getVisitId()));
+        }
+
+        Admission admission = admissionRepository.findByVisitId(visit.getVisitId()).orElse(null);
+        if (admission == null || !"ACTIVE".equalsIgnoreCase(admission.getStatus())) {
+            throw new IllegalStateException("Only currently admitted patients can be discharged. Patient " + visit.getPatientId() + " has no active inpatient admission.");
+        }
 
         // 1. Release Bed if assigned
         String releasedBedInfo = "None";
@@ -144,7 +161,7 @@ public class AdmissionDischargeService {
         }
 
         // 3. Release Active Equipment Allocations
-        List<ResourceAllocation> allocations = allocationRepository.findByVisitIdAndStatus(dto.getVisitId(), "ACTIVE");
+        List<ResourceAllocation> allocations = allocationRepository.findByVisitIdAndStatus(visit.getVisitId(), "ACTIVE");
         StringBuilder resourcesReleasedSummary = new StringBuilder();
         resourcesReleasedSummary.append("Bed: ").append(releasedBedInfo).append("; ");
 
@@ -160,18 +177,16 @@ public class AdmissionDischargeService {
 
                 resourceHistoryRepository.save(new ResourceHistory(
                         res.getResourceId(), res.getResourceName(), "RELEASED", alloc.getQuantity(),
-                        visit.getPatientId(), dto.getVisitId(), "Deallocated upon patient discharge"
+                        visit.getPatientId(), visit.getVisitId(), "Deallocated upon patient discharge"
                 ));
                 resourcesReleasedSummary.append(res.getResourceName()).append(" (Qty: ").append(alloc.getQuantity()).append("), ");
             }
         }
 
         // 4. Update Admission record
-        if (admission != null) {
-            admission.setStatus("DISCHARGED");
-            admission.setDischargeDate(LocalDateTime.now());
-            admissionRepository.save(admission);
-        }
+        admission.setStatus("DISCHARGED");
+        admission.setDischargeDate(LocalDateTime.now());
+        admissionRepository.save(admission);
 
         // 5. Update Visit
         visit.setVisitStatus("DISCHARGED");
@@ -186,10 +201,11 @@ public class AdmissionDischargeService {
             dischargeId = String.format("DIS-%04d", 7001 + histCount);
         }
 
-        String admId = admission != null ? admission.getAdmissionId() : "ADM-OUTPATIENT";
+        String admId = admission.getAdmissionId();
         DischargeHistory dischargeRecord = new DischargeHistory(
-                dischargeId, admId, dto.getVisitId(), visit.getPatientId(),
-                dto.getDischargeSummary() != null ? dto.getDischargeSummary() : "Patient condition improved. Medically discharged.",
+                dischargeId, admId, visit.getVisitId(), visit.getPatientId(),
+                dto.getDischargeSummary() != null && !dto.getDischargeSummary().trim().isEmpty() ?
+                        dto.getDischargeSummary().trim() : "Patient condition stabilized. Medically discharged.",
                 resourcesReleasedSummary.toString(),
                 dto.getFollowUpInstructions() != null ? dto.getFollowUpInstructions() : "Follow-up in outpatient clinic after 1 week."
         );
@@ -199,6 +215,65 @@ public class AdmissionDischargeService {
         waitingQueueService.processResourceQueue();
 
         return savedHistory;
+    }
+
+    public List<com.hospital.resourceallocation.dto.AdmittedPatientDTO> getAdmittedPatients() {
+        List<Admission> admissions = admissionRepository.findByStatus("ACTIVE");
+        List<com.hospital.resourceallocation.dto.AdmittedPatientDTO> list = new java.util.ArrayList<>();
+
+        for (Admission adm : admissions) {
+            com.hospital.resourceallocation.dto.AdmittedPatientDTO dto = new com.hospital.resourceallocation.dto.AdmittedPatientDTO();
+            dto.setAdmissionId(adm.getAdmissionId());
+            dto.setVisitId(adm.getVisitId());
+            dto.setPatientId(adm.getPatientId());
+            dto.setAdmissionDate(adm.getAdmissionDate());
+
+            patientRepository.findById(adm.getPatientId()).ifPresent(p -> {
+                dto.setPatientName(p.getFullName());
+                dto.setPatientAge(p.getAge());
+                dto.setPatientGender(p.getGender());
+                dto.setContactNumber(p.getContactNumber());
+            });
+
+            patientVisitRepository.findById(adm.getVisitId()).ifPresent(v -> {
+                dto.setMedicalCondition(v.getNotes());
+                dto.setSeverity(v.getSeverityLevel() != null ? v.getSeverityLevel() : "Normal");
+            });
+
+            if (adm.getBedId() != null) {
+                bedRepository.findById(adm.getBedId()).ifPresent(b -> {
+                    dto.setBedId(b.getBedId());
+                    dto.setBedNumber(b.getBedNumber());
+                    dto.setBedType(b.getBedType());
+                    dto.setFloorWard(b.getFloorWard());
+                });
+            }
+
+            if (adm.getDoctorId() != null) {
+                doctorRepository.findById(adm.getDoctorId()).ifPresent(d -> {
+                    dto.setDoctorId(d.getDoctorId());
+                    dto.setDoctorName(d.getDoctorName());
+                });
+            }
+
+            list.add(dto);
+        }
+        return list;
+    }
+
+    public com.hospital.resourceallocation.dto.AdmittedPatientDTO searchAdmittedPatient(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search query cannot be empty");
+        }
+        String q = query.trim();
+        List<com.hospital.resourceallocation.dto.AdmittedPatientDTO> all = getAdmittedPatients();
+
+        return all.stream()
+                .filter(a -> (a.getPatientId() != null && a.getPatientId().equalsIgnoreCase(q)) ||
+                        (a.getVisitId() != null && a.getVisitId().equalsIgnoreCase(q)) ||
+                        (a.getPatientName() != null && a.getPatientName().toLowerCase().contains(q.toLowerCase())))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Patient '" + q + "' is not currently admitted. Only inpatients with an active admission can be discharged."));
     }
 
     public List<Admission> getAllAdmissions() {

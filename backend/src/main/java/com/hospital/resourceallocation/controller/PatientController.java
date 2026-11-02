@@ -28,8 +28,16 @@ public class PatientController {
     }
 
     @GetMapping
-    public ApiResponse<List<Patient>> getAllPatients() {
+    public ApiResponse<List<Patient>> getAllPatients(@RequestParam(required = false) String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            return ApiResponse.ok(patientService.searchPatients(search));
+        }
         return ApiResponse.ok(patientService.getAllPatients());
+    }
+
+    @GetMapping("/overview")
+    public ApiResponse<List<com.hospital.resourceallocation.dto.PatientOverviewDTO>> getPatientOverviews(@RequestParam(required = false) String search) {
+        return ApiResponse.ok(patientService.getPatientOverviews(search));
     }
 
     @GetMapping("/{id}")

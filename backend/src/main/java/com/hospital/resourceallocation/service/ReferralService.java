@@ -29,6 +29,7 @@ public class ReferralService {
     private final ReferralRepository referralRepository;
     private final PatientVisitRepository patientVisitRepository;
     private final WaitingQueueService waitingQueueService;
+    private final PatientRepository patientRepository;
 
     @Autowired
     public ReferralService(DijkstraRouter routePlanner,
@@ -38,7 +39,8 @@ public class ReferralService {
                            ResourceRepository resourceRepository,
                            ReferralRepository referralRepository,
                            PatientVisitRepository patientVisitRepository,
-                           WaitingQueueService waitingQueueService) {
+                           WaitingQueueService waitingQueueService,
+                           PatientRepository patientRepository) {
         this.routePlanner = routePlanner;
         this.hospitalRepository = hospitalRepository;
         this.bedRepository = bedRepository;
@@ -47,6 +49,7 @@ public class ReferralService {
         this.referralRepository = referralRepository;
         this.patientVisitRepository = patientVisitRepository;
         this.waitingQueueService = waitingQueueService;
+        this.patientRepository = patientRepository;
     }
 
     /**
@@ -189,6 +192,80 @@ public class ReferralService {
 
     public List<Referral> getAllReferrals() {
         return referralRepository.findAll();
+    }
+
+    public List<com.hospital.resourceallocation.dto.ReferralDetailDTO> getEnrichedReferrals() {
+        List<Referral> referrals = referralRepository.findAll();
+        List<com.hospital.resourceallocation.dto.ReferralDetailDTO> list = new java.util.ArrayList<>();
+
+        for (Referral r : referrals) {
+            com.hospital.resourceallocation.dto.ReferralDetailDTO dto = new com.hospital.resourceallocation.dto.ReferralDetailDTO();
+            dto.setReferralId(r.getReferralId());
+            dto.setVisitId(r.getVisitId());
+            dto.setPatientId(r.getPatientId());
+            dto.setFromHospitalId(r.getFromHospitalId());
+            dto.setToHospitalId(r.getToHospitalId());
+            dto.setReason(r.getReason());
+            dto.setTravelTimeMinutes(r.getTravelTimeMinutes());
+            dto.setRoutePath(r.getRoutePath());
+            dto.setStatus(r.getStatus());
+            dto.setCreatedAt(r.getCreatedAt());
+
+            patientRepository.findById(r.getPatientId()).ifPresent(p -> {
+                dto.setPatientName(p.getFullName());
+                dto.setPatientAge(p.getAge());
+                dto.setPatientGender(p.getGender());
+                dto.setPatientContact(p.getContactNumber());
+            });
+
+            patientVisitRepository.findById(r.getVisitId()).ifPresent(v -> {
+                dto.setSeverity(v.getSeverityLevel() != null ? v.getSeverityLevel() : "Normal");
+                dto.setMedicalCondition(v.getNotes());
+            });
+
+            hospitalRepository.findById(r.getToHospitalId()).ifPresent(h -> {
+                dto.setToHospitalName(h.getHospitalName());
+                dto.setToHospitalContact(h.getContactNumber());
+                dto.setToHospitalAddress(h.getAddress());
+            });
+
+            list.add(dto);
+        }
+        return list;
+    }
+
+    @Transactional
+    public Referral approveReferral(String referralId) {
+        Referral ref = referralRepository.findById(referralId)
+                .orElseThrow(() -> new IllegalArgumentException("Referral not found: " + referralId));
+        ref.setStatus("CONFIRMED");
+        Referral saved = referralRepository.save(ref);
+
+        patientVisitRepository.findById(ref.getVisitId()).ifPresent(v -> {
+            v.setVisitStatus("REFERRED");
+            patientVisitRepository.save(v);
+        });
+
+        return saved;
+    }
+
+    @Transactional
+    public void moveReferralToWaitingQueue(String referralId) {
+        Referral ref = referralRepository.findById(referralId)
+                .orElseThrow(() -> new IllegalArgumentException("Referral not found: " + referralId));
+        ref.setStatus("CANCELLED");
+        referralRepository.save(ref);
+
+        PatientVisit visit = patientVisitRepository.findById(ref.getVisitId())
+                .orElseThrow(() -> new IllegalArgumentException("Visit not found: " + ref.getVisitId()));
+
+        waitingQueueService.enqueueResourceRequest(
+                visit.getVisitId(), visit.getPatientId(), visit.getSeverityLevel(),
+                "GENERAL", null, ref.getReason()
+        );
+
+        visit.setVisitStatus("WAITING_FOR_RESOURCE");
+        patientVisitRepository.save(visit);
     }
 
     public List<Hospital> getAllHospitals() {

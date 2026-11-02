@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface AdmissionRepository extends JpaRepository<Admission, String> {
     Optional<Admission> findByVisitId(String visitId);
     List<Admission> findByPatientId(String patientId);
+    List<Admission> findByPatientIdAndStatus(String patientId, String status);
     List<Admission> findByStatus(String status);
     List<Admission> findByHospitalIdAndStatus(String hospitalId, String status);
 

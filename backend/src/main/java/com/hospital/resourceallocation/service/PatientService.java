@@ -48,6 +48,7 @@ public class PatientService {
     private final ResourceAllocationRepository resourceAllocationRepository;
     private final ConsultationService consultationService;
     private final WaitingQueueService waitingQueueService;
+    private final BedRepository bedRepository;
 
     @Autowired
     public PatientService(PatientRepository patientRepository,
@@ -62,7 +63,8 @@ public class PatientService {
                           ReferralRepository referralRepository,
                           ResourceAllocationRepository resourceAllocationRepository,
                           ConsultationService consultationService,
-                          WaitingQueueService waitingQueueService) {
+                          WaitingQueueService waitingQueueService,
+                          BedRepository bedRepository) {
         this.patientRepository = patientRepository;
         this.patientVisitRepository = patientVisitRepository;
         this.doctorRepository = doctorRepository;
@@ -76,6 +78,7 @@ public class PatientService {
         this.resourceAllocationRepository = resourceAllocationRepository;
         this.consultationService = consultationService;
         this.waitingQueueService = waitingQueueService;
+        this.bedRepository = bedRepository;
     }
 
     /**
@@ -147,12 +150,14 @@ public class PatientService {
         }
 
         String category = dto.getPatientCategory() != null ? dto.getPatientCategory() : "Outpatient";
-        String notes = dto.getNotes() != null ? dto.getNotes() : "Patient arrived at reception intake.";
+        String notes = dto.getNotes() != null && !dto.getNotes().trim().isEmpty() ? dto.getNotes().trim() : "Patient arrived at reception intake.";
+        String severity = (dto.getSeverityLevel() != null && !dto.getSeverityLevel().trim().isEmpty() && !dto.getSeverityLevel().equalsIgnoreCase("PENDING_TRIAGE")) ?
+                dto.getSeverityLevel().trim() : "Normal";
 
         PatientVisit visit = new PatientVisit(
-                visitId, patient.getPatientId(), "PENDING_TRIAGE", category, LocalDateTime.now(), notes
+                visitId, patient.getPatientId(), severity, category, LocalDateTime.now(), notes
         );
-        visit.setVisitStatus("PENDING_TRIAGE");
+        visit.setVisitStatus("REGISTERED");
 
         // Record preferred doctor for this visit
         String prefDocId = dto.getPreferredDoctorId();
@@ -339,6 +344,58 @@ public class PatientService {
 
     public List<Patient> getAllPatients() {
         return patientRepository.findAll();
+    }
+
+    public List<Patient> searchPatients(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return patientRepository.findAll();
+        }
+        String q = search.trim();
+        if (patientRepository.existsById(q)) {
+            return List.of(patientRepository.findById(q).get());
+        }
+        List<Patient> byName = patientRepository.findByFullNameContainingIgnoreCase(q);
+        if (!byName.isEmpty()) return byName;
+        return patientRepository.findByContactNumber(q);
+    }
+
+    public List<com.hospital.resourceallocation.dto.PatientOverviewDTO> getPatientOverviews(String search) {
+        List<Patient> patients = searchPatients(search);
+        List<com.hospital.resourceallocation.dto.PatientOverviewDTO> list = new java.util.ArrayList<>();
+
+        for (Patient p : patients) {
+            com.hospital.resourceallocation.dto.PatientOverviewDTO dto = new com.hospital.resourceallocation.dto.PatientOverviewDTO();
+            dto.setPatientId(p.getPatientId());
+            dto.setFullName(p.getFullName());
+            dto.setDateOfBirth(p.getDateOfBirth());
+            dto.setAge(p.getAge());
+            dto.setGender(p.getGender());
+            dto.setContactNumber(p.getContactNumber());
+            dto.setEmail(p.getEmail());
+            dto.setAddress(p.getAddress());
+            dto.setPatientType(p.getPatientType());
+
+            List<PatientVisit> visits = patientVisitRepository.findByPatientIdOrderByArrivalTimeDesc(p.getPatientId());
+            if (!visits.isEmpty()) {
+                PatientVisit latest = visits.get(0);
+                dto.setVisitId(latest.getVisitId());
+                dto.setMedicalCondition(latest.getNotes());
+                dto.setSeverity(latest.getSeverityLevel() != null && !latest.getSeverityLevel().equalsIgnoreCase("PENDING_TRIAGE") ?
+                        latest.getSeverityLevel() : "Normal");
+                dto.setVisitStatus(latest.getVisitStatus());
+                dto.setRegistrationTime(latest.getArrivalTime());
+
+                if (latest.getAssignedBedId() != null) {
+                    bedRepository.findById(latest.getAssignedBedId()).ifPresent(b -> dto.setAssignedBed(b.getBedNumber() + " (" + b.getBedType() + ")"));
+                }
+            } else {
+                dto.setSeverity("Normal");
+                dto.setMedicalCondition("No prior clinical episodes recorded");
+                dto.setVisitStatus("REGISTERED");
+            }
+            list.add(dto);
+        }
+        return list;
     }
 
     public Optional<Patient> getPatientById(String patientId) {

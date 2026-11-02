@@ -3,43 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Discharge & Resource Release | GHRAS</title>
+    <title>Discharge Summary Module | Government Hospital Resource Allocation System</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/tables.css">
+    <style>
+        .discharge-summary-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .summary-header-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            background: #ffffff;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+        .summary-metric-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .summary-metric-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .discharge-result-banner {
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .discharge-result-banner.success {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: Exactly 5 Modules -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="hospital-logo">🏥</div>
                 <div class="hospital-title">
                     <h2>GHRAS PORTAL</h2>
-                    <p>Nalam District GH</p>
+                    <p>Government Hospital System</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Core Management</div>
-                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <div class="nav-section-title">Hospital Modules</div>
                 <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
-                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
-                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
-                
-                <div class="nav-section-title">Resource Inventory</div>
-                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
-                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
-                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
-
-                <div class="nav-section-title">Operations & Network</div>
-                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
-                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
-                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
-                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
-                <a href="discharge.html" class="nav-item active"><span class="nav-icon">📤</span> Discharge</a>
-                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Available Resources</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referral Hospitals</a>
+                <a href="discharge.html" class="nav-item active"><span class="nav-icon">📤</span> Discharge Summary</a>
             </nav>
         </aside>
 
@@ -47,64 +82,170 @@
         <main class="main-wrapper">
             <header class="top-header">
                 <div class="page-headline">
-                    <h1>Inpatient Discharge & Automated Deallocation</h1>
-                    <p>Discharging an Inpatient Automatically Releases Assigned Bed and Equipment, Deducts Consumables, and Re-evaluates Priority Waiting Queues</p>
+                    <h1>Discharge Summary Module</h1>
+                    <p>Search admitted patients, generate official discharge summary, release beds & resources, and automatically trigger priority queue auto-allocation</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="loadAdmittedPatientsAndHistory()">
+                        🔄 Refresh Admitted Patients
+                    </button>
                 </div>
             </header>
 
             <div class="content-body">
-                <!-- Discharge Form Card -->
-                <div style="background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:24px; margin-bottom:28px;">
-                    <h3 style="margin-top:0; margin-bottom:16px; color:var(--text-primary); font-size:16px;">Process Inpatient Discharge</h3>
-                    <form id="discharge-form">
+                <!-- Search Admitted Patient Box -->
+                <div class="table-card" style="padding:22px; margin-bottom:24px;">
+                    <h2 style="font-size:16px; margin:0 0 8px 0; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                        <span>🔍</span> Search Admitted Patient by Patient ID
+                    </h2>
+                    <p style="font-size:13px; color:var(--text-secondary); margin:0 0 16px 0;">
+                        Enter Patient ID (e.g. <code>P-1002</code>, <code>P-1007</code>) or Citizen Name. Only currently admitted inpatients can be discharged.
+                    </p>
+
+                    <div style="display:flex; gap:12px; align-items:center; max-width:650px;">
+                        <div class="search-input-wrapper" style="flex:1;">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="admitted-search-input" class="form-control"
+                                   placeholder="Type Patient ID (e.g. P-1002, P-1007) or Name..."
+                                   onkeypress="if(event.key==='Enter') searchAdmittedPatient()">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="searchAdmittedPatient()">
+                            Fetch Details
+                        </button>
+                    </div>
+
+                    <!-- Not Admitted Error Alert Message -->
+                    <div id="search-error-msg" style="display:none; margin-top:14px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:12px 16px; border-radius:8px; font-size:13px; font-weight:600;">
+                    </div>
+                </div>
+
+                <!-- Result & Reallocation Banner -->
+                <div id="discharge-result-banner" class="discharge-result-banner"></div>
+
+                <!-- ============================================================== -->
+                <!-- DISCHARGE SUMMARY & CLINICAL DETAILS CARD                     -->
+                <!-- ============================================================== -->
+                <div id="discharge-card" class="discharge-summary-card" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <h2 style="font-size:18px; font-weight:800; color:#065f46; margin:0;">
+                                    Hospital Inpatient Discharge Summary
+                                </h2>
+                                <span class="badge badge-occupied" id="dc-card-bed-badge">Bed: -</span>
+                            </div>
+                            <p style="font-size:12.5px; color:#047857; margin:4px 0 0 0;">
+                                Verify patient identity and discharge timestamp below before confirming resource release.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline" style="font-size:12px; padding:4px 10px;" onclick="closeDischargeCard()">
+                            Close
+                        </button>
+                    </div>
+
+                    <!-- Required Discharge Summary Display Fields -->
+                    <div class="summary-header-grid">
+                        <div>
+                            <div class="summary-metric-label">1. Patient ID</div>
+                            <div class="summary-metric-val" id="dc-display-patient-id" style="color:var(--primary);">-</div>
+                        </div>
+                        <div>
+                            <div class="summary-metric-label">2. Patient Name</div>
+                            <div class="summary-metric-val" id="dc-display-patient-name">-</div>
+                        </div>
+                        <div>
+                            <div class="summary-metric-label">3. Discharge Date & Time</div>
+                            <div class="summary-metric-val" id="dc-display-datetime" style="color:#047857;">-</div>
+                        </div>
+                        <div>
+                            <div class="summary-metric-label">Admission Details</div>
+                            <div style="font-size:13px; font-weight:600; color:#334155;" id="dc-display-admission">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Discharge Form -->
+                    <form id="discharge-submit-form" onsubmit="handleDischargeSubmit(event)">
+                        <input type="hidden" id="dc-selected-patient-id">
+                        <input type="hidden" id="dc-selected-visit-id">
+
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label" for="dc-visit-id">Patient Visit ID <span class="required">*</span></label>
-                                <input type="text" id="dc-visit-id" class="form-control" placeholder="e.g. VIS-1001" required>
+                            <div class="form-group full-width">
+                                <label class="form-label" for="dc-clinical-summary">Clinical Discharge Summary <span class="required">*</span></label>
+                                <textarea id="dc-clinical-summary" class="form-control" rows="2" placeholder="e.g. Patient stabilized; vitals within normal parameters; afebrile for 48 hrs. Full recovery achieved." required></textarea>
                             </div>
-                            <div class="form-group" style="grid-column: span 2;">
-                                <label class="form-label" for="dc-summary">Clinical Discharge Summary <span class="required">*</span></label>
-                                <input type="text" id="dc-summary" class="form-control" placeholder="e.g. Patient stabilized; vitals within normal parameters; afebrile for 48 hrs" required>
-                            </div>
-                            <div class="form-group" style="grid-column: span 3;">
-                                <label class="form-label" for="dc-followup">Discharge Follow-Up Advice & Medication Instructions</label>
-                                <input type="text" id="dc-followup" class="form-control" placeholder="e.g. Continue oral antibiotics for 5 days. Review at Medicine OPD in 1 week.">
+                            <div class="form-group full-width">
+                                <label class="form-label" for="dc-followup-advice">Follow-up Advice & Post-Discharge Medication Instructions</label>
+                                <textarea id="dc-followup-advice" class="form-control" rows="2" placeholder="e.g. Continue prescribed oral medications for 5 days. Review at Medicine OPD in 1 week. Avoid strenuous physical activity."></textarea>
                             </div>
                         </div>
-                        <div style="margin-top:16px; display:flex; justify-content:flex-end;">
-                            <button type="submit" class="btn btn-primary">
-                                Complete Discharge & Release Hospital Resources
+
+                        <div style="margin-top:18px; display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; padding:14px 18px; border-radius:8px; border:1px solid #a7f3d0;">
+                            <div style="font-size:12.5px; color:#065f46;">
+                                ⚡ <strong>Automated System Action:</strong> Discharging this patient will automatically release Bed <strong id="dc-bed-num-label">-</strong>, update resource inventory to <code>AVAILABLE</code>, and <strong>instantly auto-allocate the freed bed to the highest-priority waiting patient</strong>.
+                            </div>
+                            <button type="submit" id="btn-submit-discharge" class="btn btn-primary" style="padding:10px 24px; font-weight:700; background:#0fa37f; border-color:#0fa37f; white-space:nowrap;">
+                                🚀 Complete Discharge & Release Resources
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Historical Discharge Summaries -->
-                <h3 style="margin-bottom:12px; color:var(--text-primary); font-size:16px;">Discharge Audit Records</h3>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Discharge ID</th>
-                                <th>Visit / Patient ID</th>
-                                <th>Bed Released</th>
-                                <th>Discharge Timestamp</th>
-                                <th>Clinical Summary</th>
-                                <th>Follow-up Instructions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="discharge-history-body">
-                            <tr><td colspan="6" class="empty-state">Loading discharge history...</td></tr>
-                        </tbody>
-                    </table>
+                <!-- Currently Admitted Inpatients Quick List -->
+                <div class="table-card" style="margin-bottom:30px;">
+                    <div style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:15px; font-weight:700;">Currently Admitted Inpatients (Primary Hospital H-001)</h3>
+                        <span class="badge badge-occupied" id="count-admitted-badge">0 Admitted Patients</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient ID</th>
+                                    <th>Patient Name</th>
+                                    <th>Assigned Bed & Ward</th>
+                                    <th>Attending Doctor</th>
+                                    <th>Condition / Acuity</th>
+                                    <th>Admission Timestamp</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admitted-table-body">
+                                <tr><td colspan="7" class="empty-state">Loading admitted patients...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Discharge Audit History Table -->
+                <div class="table-card">
+                    <div style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:15px; font-weight:700;">Official Discharge History & Summary Audit Log</h3>
+                        <span class="badge badge-info">Persistent Medical Records</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Discharge ID</th>
+                                    <th>Patient ID</th>
+                                    <th>Patient Name</th>
+                                    <th>Discharge Date & Time</th>
+                                    <th>Released Bed</th>
+                                    <th>Clinical Summary</th>
+                                    <th>Follow-up Advice</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discharge-history-body">
+                                <tr><td colspan="7" class="empty-state">Loading discharge records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast-container"></div>
-
+    <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script src="js/discharge.js"></script>

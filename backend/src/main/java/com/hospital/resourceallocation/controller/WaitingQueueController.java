@@ -35,6 +35,12 @@ public class WaitingQueueController {
                 waitingQueueService.getResourceWaitingQueue());
     }
 
+    @GetMapping("/resource-detailed")
+    public ApiResponse<List<com.hospital.resourceallocation.dto.QueueItemDetailDTO>> getResourceQueueDetailed() {
+        return ApiResponse.ok("Detailed priority waiting queue ordered by severity and arrival time",
+                waitingQueueService.getResourceQueueDetailed());
+    }
+
     @PostMapping("/consultation/process")
     public ApiResponse<String> processConsultationQueue() {
         waitingQueueService.processConsultationQueue();

@@ -35,6 +35,16 @@ public class AdmissionController {
         return ApiResponse.ok(admissionService.getActiveAdmissions());
     }
 
+    @GetMapping("/admitted-patients")
+    public ApiResponse<List<com.hospital.resourceallocation.dto.AdmittedPatientDTO>> getAdmittedPatients() {
+        return ApiResponse.ok(admissionService.getAdmittedPatients());
+    }
+
+    @GetMapping("/search-admitted")
+    public ApiResponse<com.hospital.resourceallocation.dto.AdmittedPatientDTO> searchAdmittedPatient(@RequestParam String query) {
+        return ApiResponse.ok(admissionService.searchAdmittedPatient(query));
+    }
+
     @PostMapping("/admit")
     public ApiResponse<Admission> admitPatient(@RequestBody AdmissionRequestDTO dto) {
         Admission admission = admissionService.admitPatient(dto);

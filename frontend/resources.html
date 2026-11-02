@@ -3,42 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Resources | GHRAS</title>
+    <title>Available Resources Module | Government Hospital Resource Allocation System</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/tables.css">
+    <style>
+        .res-cat-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .res-cat-tab {
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13.5px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .res-cat-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .res-cat-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(11, 99, 182, 0.2);
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .kpi-num {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .waiting-queue-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 22px;
+            margin-top: 32px;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: Exactly 5 Modules -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="hospital-logo">🏥</div>
                 <div class="hospital-title">
                     <h2>GHRAS PORTAL</h2>
-                    <p>Nalam District GH</p>
+                    <p>Government Hospital System</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Core Management</div>
-                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <div class="nav-section-title">Hospital Modules</div>
                 <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
-                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
-                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
-                
-                <div class="nav-section-title">Resource Inventory</div>
-                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
-                <a href="resources.html" class="nav-item active"><span class="nav-icon">📦</span> Medical Resources</a>
-                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
-
-                <div class="nav-section-title">Operations & Network</div>
-                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
-                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
-                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
-                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
-                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
-                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="resources.html" class="nav-item active"><span class="nav-icon">📦</span> Available Resources</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referral Hospitals</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge Summary</a>
             </nav>
         </aside>
 
@@ -46,113 +111,155 @@
         <main class="main-wrapper">
             <header class="top-header">
                 <div class="page-headline">
-                    <h1>Medical Resource & Inventory Management</h1>
-                    <p>Reusable medical equipment, consumable supplies, and specialized hospital facilities</p>
+                    <h1>Available Resources Module</h1>
+                    <p>Unified live inventory of all hospital resources including Beds, Medical Equipment, Consumable Supplies, and Facilities</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="loadResourcesAndQueue()">
+                        🔄 Refresh Inventory
+                    </button>
                 </div>
             </header>
 
             <div class="content-body">
-                <!-- Filter Bar -->
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <label class="form-label" style="margin: 0;">Resource Category:</label>
-                        <select id="resource-cat-filter" class="form-control" style="width: auto;">
-                            <option value="">All Categories</option>
-                            <option value="EQUIPMENT">Medical Equipment (Reusable)</option>
-                            <option value="SUPPLY">Medical Supplies (Consumables)</option>
-                            <option value="FACILITY">Hospital Facilities</option>
-                        </select>
+                <!-- Summary KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;">📦</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-total-res">0</div>
+                            <div class="kpi-label">Total Resources Tracked</div>
+                        </div>
                     </div>
-                    <div style="font-size:12.5px; color:var(--text-secondary);">
-                        Consumables are automatically deducted upon use; equipment is returned upon discharge.
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#dcfce7; color:#15803d;">✅</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-avail-res" style="color:#15803d;">0</div>
+                            <div class="kpi-label">Available for Use</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#fee2e2; color:#dc2626;">🔒</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-occupied-res" style="color:#dc2626;">0</div>
+                            <div class="kpi-label">Occupied / Locked</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#fef3c7; color:#d97706;">⏳</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-queue-count" style="color:#d97706;">0</div>
+                            <div class="kpi-label">Priority Waiting Queue</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Resources Inventory Table -->
-                <div class="table-card" style="margin-bottom: 28px;">
-                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="font-size: 15px; font-weight: 700;">Live Hospital Inventory (H-001 Primary Hospital)</h3>
-                        <span class="badge badge-info">Inheritance: Resource.java</span>
+                <!-- Category Tabs -->
+                <div class="res-cat-tabs">
+                    <button class="res-cat-tab active" id="tab-all" onclick="setResourceCategory('ALL')">
+                        📦 All Resources (<span id="count-all">0</span>)
+                    </button>
+                    <button class="res-cat-tab" id="tab-bed" onclick="setResourceCategory('BED')">
+                        🛏 Hospital Beds Only (<span id="count-beds">0</span>)
+                    </button>
+                    <button class="res-cat-tab" id="tab-eq" onclick="setResourceCategory('EQUIPMENT')">
+                        🩺 Medical Equipment (<span id="count-eq">0</span>)
+                    </button>
+                    <button class="res-cat-tab" id="tab-sp" onclick="setResourceCategory('SUPPLY')">
+                        💊 Consumables & Supplies (<span id="count-sp">0</span>)
+                    </button>
+                    <button class="res-cat-tab" id="tab-fc" onclick="setResourceCategory('FACILITY')">
+                        🏥 Hospital Facilities (<span id="count-fc">0</span>)
+                    </button>
+                </div>
+
+                <!-- Filter & Search Bar -->
+                <div class="filter-bar">
+                    <div class="search-input-wrapper" style="flex:1;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="resource-search-input" class="form-control"
+                               placeholder="Search resource by ID (e.g. GEN-01, RES-EQ-01) or item name (e.g. Oxygen, ICU)..."
+                               oninput="filterResourcesTable()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label" style="margin:0;">Status:</label>
+                        <select id="status-filter" class="form-control" style="width:auto;" onchange="filterResourcesTable()">
+                            <option value="">All Statuses</option>
+                            <option value="AVAILABLE">Available Only</option>
+                            <option value="OCCUPIED">Occupied Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Unified Resources Table -->
+                <div class="table-card" style="margin-bottom:30px;">
+                    <div style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:15px; font-weight:700;">Live Hospital Resource & Bed Inventory (Primary Hospital H-001)</h3>
+                        <span class="badge badge-info">Double-Allocation Prevention Active</span>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Resource ID</th>
-                                    <th>Resource Item</th>
-                                    <th>Category</th>
-                                    <th>Available / Total</th>
-                                    <th>Currently Allocated</th>
-                                    <th>Type</th>
-                                    <th>Actions</th>
+                                    <th>Resource / Bed ID</th>
+                                    <th>Resource Item Name</th>
+                                    <th>Category & Type</th>
+                                    <th>Status</th>
+                                    <th>Available Units</th>
+                                    <th>Allocated / In Use</th>
+                                    <th>Currently Assigned Patient</th>
+                                    <th>Location</th>
                                 </tr>
                             </thead>
                             <tbody id="resources-table-body">
-                                <tr><td colspan="7" class="empty-state">Loading resources...</td></tr>
+                                <tr><td colspan="8" class="empty-state">Loading combined resources and beds from database...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Resource Transaction Audit History -->
-                <div class="table-card">
-                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="font-size: 15px; font-weight: 700;">Resource Allocation & Deallocation Audit Log</h3>
-                        <span class="badge badge-available">Real-time History Stream</span>
+                <!-- ============================================================== -->
+                <!-- SEVERITY-BASED PRIORITY WAITING QUEUE                           -->
+                <!-- ============================================================== -->
+                <div class="waiting-queue-section">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h2 style="font-size:17px; font-weight:800; color:#1e3a8a; margin:0 0 6px 0; display:flex; align-items:center; gap:8px;">
+                                <span>⏳</span> Severity-Based Priority Waiting List
+                            </h2>
+                            <p style="font-size:13px; color:#1e40af; margin:0; max-width:800px;">
+                                Automatically synchronized priority queue. Patients are strictly prioritized by condition severity:
+                                <strong>Critical (Score 1) → Serious (Score 2) → Normal (Score 3)</strong>.
+                                When any resource or bed is freed upon patient discharge, the system <strong>immediately and automatically allocates it</strong> to the next highest-priority waiting patient.
+                            </p>
+                        </div>
+                        <span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700; font-size:12px;">
+                            Zero Manual Intervention Required
+                        </span>
                     </div>
-                    <div class="table-responsive">
+
+                    <div class="table-responsive" style="background:#fff; border-radius:8px; border:1px solid #bfdbfe;">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Resource Name</th>
-                                    <th>Action</th>
-                                    <th>Quantity</th>
-                                    <th>Patient / Visit</th>
-                                    <th>Timestamp</th>
-                                    <th>Remarks</th>
+                                    <th>Queue ID</th>
+                                    <th>Patient ID & Name</th>
+                                    <th>Severity Acuity</th>
+                                    <th>Priority Score</th>
+                                    <th>Requested Resource</th>
+                                    <th>Enqueued Timestamp</th>
+                                    <th>Wait Time</th>
+                                    <th>Queue Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="resource-history-body">
-                                <tr><td colspan="6" class="empty-state">Loading audit transactions...</td></tr>
+                            <tbody id="waiting-queue-table-body">
+                                <tr><td colspan="8" class="empty-state">Loading synchronized priority queue...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Allocate Resource Modal -->
-    <div id="allocate-resource-modal" class="modal-overlay">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="alloc-res-title">Allocate Resource</h3>
-                <button class="modal-close" onclick="closeModal('allocate-resource-modal')">&times;</button>
-            </div>
-            <form onsubmit="handleResourceAllocateSubmit(event)">
-                <div class="modal-body">
-                    <input type="hidden" id="alloc-res-id">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="alloc-res-visit-id">Patient Visit ID <span class="required">*</span></label>
-                            <input type="text" id="alloc-res-visit-id" class="form-control" placeholder="e.g. VIS-2002" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="alloc-res-patient-id">Patient ID</label>
-                            <input type="text" id="alloc-res-patient-id" class="form-control" placeholder="e.g. P-1002">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="alloc-res-qty">Quantity to Allocate <span class="required">*</span></label>
-                            <input type="number" id="alloc-res-qty" class="form-control" value="1" min="1" max="100" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('allocate-resource-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Confirm Allocation</button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- Scripts -->

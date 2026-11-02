@@ -3,43 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Referrals & Dijkstra Routing | GHRAS</title>
+    <title>Referral Hospitals Module | Government Hospital Resource Allocation System</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/tables.css">
+    <style>
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .kpi-num {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .hospital-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hospital-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .hospital-network-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+        .badge-pending {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+        .badge-confirmed {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+        .badge-queued {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: Exactly 5 Modules -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="hospital-logo">🏥</div>
                 <div class="hospital-title">
                     <h2>GHRAS PORTAL</h2>
-                    <p>Nalam District GH</p>
+                    <p>Government Hospital System</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Core Management</div>
-                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <div class="nav-section-title">Hospital Modules</div>
                 <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
-                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
-                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
-                
-                <div class="nav-section-title">Resource Inventory</div>
-                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
-                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
-                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
-
-                <div class="nav-section-title">Operations & Network</div>
-                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
-                <a href="referrals.html" class="nav-item active"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
-                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
-                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
-                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
-                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+                <a href="patients.html" class="nav-item"><span class="nav-icon">👥</span> Patients</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Available Resources</a>
+                <a href="referrals.html" class="nav-item active"><span class="nav-icon">🚑</span> Referral Hospitals</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge Summary</a>
             </nav>
         </aside>
 
@@ -47,110 +107,96 @@
         <main class="main-wrapper">
             <header class="top-header">
                 <div class="page-headline">
-                    <h1>Inter-Hospital Referrals & Dijkstra Shortest Path</h1>
-                    <p>Intelligent Patient Transfer Dispatch with Clinical Eligibility Pre-Filtering & Weighted Graph Routing</p>
+                    <h1>Referral Hospitals Module</h1>
+                    <p>Automated Dijkstra shortest-path routing, zero manual re-entry, and administrative referral verification & approval</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-primary" onclick="openModal('new-referral-modal'); document.getElementById('referral-request-form').reset(); document.getElementById('dijkstra-route-preview').style.display='none';">
-                        + New Referral Request
+                    <button class="btn btn-outline" onclick="loadReferralsData()">
+                        🔄 Refresh Referrals
                     </button>
                 </div>
             </header>
 
             <div class="content-body">
-                <!-- Connected Hospital Network Grid -->
-                <h3 style="margin-bottom:12px; color:var(--text-primary); font-size:16px;">Regional Hospital Network (Graph Vertices)</h3>
-                <div id="hospitals-network-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px; margin-bottom:28px;">
-                    <div class="empty-state" style="grid-column: 1 / -1;">Loading connected hospitals...</div>
-                </div>
-
-                <!-- Referrals Data Table -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <h3 style="color:var(--text-primary); font-size:16px; margin:0;">Active & Historical Inter-Hospital Referrals</h3>
-                    <div style="font-size:12px; color:var(--text-secondary);">
-                        Dijkstra calculates lowest total travel time across weighted road corridors.
+                <!-- Summary KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;">🚑</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-total-ref">0</div>
+                            <div class="kpi-label">Total Referrals</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#fef3c7; color:#d97706;">⏳</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-pending-ref" style="color:#d97706;">0</div>
+                            <div class="kpi-label">Pending Approval</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#dcfce7; color:#15803d;">✅</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-approved-ref" style="color:#15803d;">0</div>
+                            <div class="kpi-label">Verified & Dispatched</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background:#ede9fe; color:#7c3aed;">🏥</div>
+                        <div>
+                            <div class="kpi-num" id="kpi-hospitals-count">4</div>
+                            <div class="kpi-label">Network Hospitals</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Referral ID</th>
-                                <th>Visit / Patient ID</th>
-                                <th>Destination Hospital</th>
-                                <th>Calculated Travel Time</th>
-                                <th>Optimal Road Route (Dijkstra Path)</th>
-                                <th>Clinical Reason</th>
-                                <th>Referral Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="referrals-table-body">
-                            <tr><td colspan="7" class="empty-state">Loading referrals...</td></tr>
-                        </tbody>
-                    </table>
+                <!-- Automated Referral Management Table -->
+                <div class="table-card" style="margin-bottom:30px;">
+                    <div style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h3 style="font-size:15px; font-weight:700; margin:0 0 4px 0;">Automated Referral Transmissions & Clinical Verification</h3>
+                            <p style="font-size:12px; color:var(--text-secondary); margin:0;">
+                                Automatically generated when prescribed resources are unavailable locally at H-001. Dijkstra algorithm computes the fastest route.
+                            </p>
+                        </div>
+                        <span class="badge badge-info">Zero Manual Re-entry</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Referral ID</th>
+                                    <th>Patient Details</th>
+                                    <th>Severity</th>
+                                    <th>Prescribed Reason / Missing Resources</th>
+                                    <th>Destination Referral Hospital</th>
+                                    <th>Dijkstra Route & Travel Time</th>
+                                    <th>Status</th>
+                                    <th>Administrative Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="referrals-table-body">
+                                <tr><td colspan="8" class="empty-state">Loading referrals from database...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Registered Referral Hospitals Network Section -->
+                <div>
+                    <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                        <span>🏢</span> Connected Regional Referral Hospital Network (Dijkstra Nodes)
+                    </h3>
+                    <div id="hospitals-grid" class="hospital-network-grid">
+                        <div class="empty-state" style="grid-column: 1 / -1;">Loading registered network hospitals...</div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- New Referral Modal with Live Dijkstra Preview -->
-    <div id="new-referral-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width:680px;">
-            <div class="modal-header">
-                <h3>Inter-Hospital Referral & Route Calculation</h3>
-                <button class="modal-close" onclick="closeModal('new-referral-modal')">&times;</button>
-            </div>
-            <form id="referral-request-form">
-                <div class="modal-body">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="ref-visit-id">Patient Visit ID <span class="required">*</span></label>
-                            <input type="text" id="ref-visit-id" class="form-control" placeholder="e.g. VIS-1002" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ref-bed-type">Required Inpatient Bed Type <span class="required">*</span></label>
-                            <select id="ref-bed-type" class="form-control" required>
-                                <option value="ICU">ICU Bed (Critical Care)</option>
-                                <option value="EMERGENCY">Emergency / Trauma Bed</option>
-                                <option value="GENERAL">General Inpatient Ward</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ref-specialization">Required Specialist Doctor <span class="required">*</span></label>
-                            <select id="ref-specialization" class="form-control" required>
-                                <option value="CARDIOLOGIST">Cardiologist</option>
-                                <option value="NEUROLOGIST">Neurologist</option>
-                                <option value="ORTHOPEDIC">Orthopedic Surgeon</option>
-                                <option value="GENERAL_PHYSICIAN">General Physician</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ref-reason">Clinical Indication for Transfer <span class="required">*</span></label>
-                            <input type="text" id="ref-reason" class="form-control" placeholder="e.g. Acute STEMI requiring tertiary cath-lab intervention" required>
-                        </div>
-                    </div>
-
-                    <div style="margin: 16px 0;">
-                        <button type="button" id="btn-dijkstra-calc" class="btn btn-secondary" style="width:100%;">
-                            ⚡ Compute Fastest Eligible Hospital (Dijkstra's Algorithm)
-                        </button>
-                    </div>
-
-                    <!-- Dijkstra Route Preview Box -->
-                    <div id="dijkstra-route-preview" style="display:none; margin-top:12px;"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('new-referral-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Confirm & Dispatch Referral</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast-container"></div>
-
+    <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script src="js/referrals.js"></script>

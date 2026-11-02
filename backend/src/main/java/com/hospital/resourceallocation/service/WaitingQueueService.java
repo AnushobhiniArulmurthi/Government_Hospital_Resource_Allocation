@@ -31,6 +31,7 @@ public class WaitingQueueService {
     private final ResourceAllocationRepository allocationRepository;
     private final ResourceHistoryRepository historyRepository;
     private final AdmissionRepository admissionRepository;
+    private final com.hospital.resourceallocation.repository.PatientRepository patientRepository;
 
     @Autowired
     public WaitingQueueService(HospitalPriorityQueue priorityQueue,
@@ -42,7 +43,8 @@ public class WaitingQueueService {
                                ResourceRepository resourceRepository,
                                ResourceAllocationRepository allocationRepository,
                                ResourceHistoryRepository historyRepository,
-                               AdmissionRepository admissionRepository) {
+                               AdmissionRepository admissionRepository,
+                               com.hospital.resourceallocation.repository.PatientRepository patientRepository) {
         this.priorityQueue = priorityQueue;
         this.consultationQueueRepository = consultationQueueRepository;
         this.resourceQueueRepository = resourceQueueRepository;
@@ -53,6 +55,7 @@ public class WaitingQueueService {
         this.allocationRepository = allocationRepository;
         this.historyRepository = historyRepository;
         this.admissionRepository = admissionRepository;
+        this.patientRepository = patientRepository;
     }
 
     /**
@@ -150,6 +153,37 @@ public class WaitingQueueService {
 
     public List<ResourceWaitingQueueItem> getResourceWaitingQueue() {
         return priorityQueue.getAllResourceRequests();
+    }
+
+    public List<com.hospital.resourceallocation.dto.QueueItemDetailDTO> getResourceQueueDetailed() {
+        List<ResourceWaitingQueueItem> items = priorityQueue.getAllResourceRequests();
+        List<com.hospital.resourceallocation.dto.QueueItemDetailDTO> list = new java.util.ArrayList<>();
+
+        for (ResourceWaitingQueueItem item : items) {
+            com.hospital.resourceallocation.dto.QueueItemDetailDTO dto = new com.hospital.resourceallocation.dto.QueueItemDetailDTO();
+            dto.setQueueId(item.getQueueId());
+            dto.setVisitId(item.getVisitId());
+            dto.setPatientId(item.getPatientId());
+            dto.setSeverityLevel(item.getSeverityLevel());
+            dto.setPriorityScore(item.getPriorityScore());
+            dto.setRequiredBedType(item.getRequiredBedType());
+            dto.setRequiredResources(item.getRequiredResources());
+            dto.setStatus(item.getStatus());
+            dto.setArrivalTime(item.getArrivalTime());
+
+            patientRepository.findById(item.getPatientId()).ifPresent(p -> {
+                dto.setPatientName(p.getFullName());
+                dto.setPatientAge(p.getAge());
+                dto.setPatientGender(p.getGender());
+            });
+
+            patientVisitRepository.findById(item.getVisitId()).ifPresent(v -> {
+                dto.setMedicalCondition(v.getNotes());
+            });
+
+            list.add(dto);
+        }
+        return list;
     }
 
     /**

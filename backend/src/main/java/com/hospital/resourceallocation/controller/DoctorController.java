@@ -19,10 +19,20 @@ import java.util.Map;
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final com.hospital.resourceallocation.service.PrescriptionService prescriptionService;
 
     @Autowired
-    public DoctorController(DoctorService doctorService) {
+    public DoctorController(DoctorService doctorService,
+                            com.hospital.resourceallocation.service.PrescriptionService prescriptionService) {
         this.doctorService = doctorService;
+        this.prescriptionService = prescriptionService;
+    }
+
+    @PostMapping("/prescribe")
+    public ApiResponse<com.hospital.resourceallocation.dto.PrescriptionResponseDTO> prescribeResources(
+            @Valid @RequestBody com.hospital.resourceallocation.dto.PrescriptionRequestDTO dto) {
+        com.hospital.resourceallocation.dto.PrescriptionResponseDTO result = prescriptionService.processPrescription(dto);
+        return ApiResponse.ok(result.getMessage(), result);
     }
 
     @GetMapping

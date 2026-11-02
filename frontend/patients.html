@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Management | GHRAS</title>
+    <title>Patients Module | Government Hospital Resource Allocation System</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/tables.css">
     <style>
-        .patient-type-tabs {
+        .severity-filter-bar {
             display: flex;
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
-        .patient-type-tab {
+        .severity-filter-btn {
             padding: 8px 18px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             font-size: 13.5px;
             cursor: pointer;
@@ -23,11 +24,58 @@
             background: #fff;
             color: var(--text-secondary);
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .patient-type-tab.active {
+        .severity-filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .severity-filter-btn.active {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(11, 99, 182, 0.2);
+        }
+        .patient-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .patient-kpi-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .patient-kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .patient-kpi-num {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .patient-kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
         }
         .field-error-msg {
             color: #dc2626;
@@ -36,73 +84,45 @@
             display: none;
             font-weight: 500;
         }
-        .p360-container {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 20px;
+        .btn-prescribe-nav {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: all 0.15s;
         }
-        .p360-sidebar {
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-        }
-        .p360-section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 16px 0 8px 0;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 4px;
-        }
-        .p360-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        .badge-new {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-        .badge-regular {
-            background: #dcfce7;
-            color: #15803d;
+        .btn-prescribe-nav:hover {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: Exactly 5 Modules -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="hospital-logo">🏥</div>
                 <div class="hospital-title">
                     <h2>GHRAS PORTAL</h2>
-                    <p>Nalam District GH</p>
+                    <p>Government Hospital System</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Core Management</div>
-                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-                <a href="patients.html" class="nav-item active"><span class="nav-icon">👥</span> Patients</a>
+                <div class="nav-section-title">Hospital Modules</div>
                 <a href="doctors.html" class="nav-item"><span class="nav-icon">👨‍⚕️</span> Doctors</a>
-                <a href="consultations.html" class="nav-item"><span class="nav-icon">🩺</span> Consultations</a>
-                <a href="treatment-plans.html" class="nav-item"><span class="nav-icon">📋</span> Treatment Plans</a>
-                
-                <div class="nav-section-title">Resource Inventory</div>
-                <a href="beds.html" class="nav-item"><span class="nav-icon">🛏</span> Beds</a>
-                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Medical Resources</a>
-                <a href="diagnostics.html" class="nav-item"><span class="nav-icon">🔬</span> Diagnostic Services</a>
-
-                <div class="nav-section-title">Operations & Network</div>
-                <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏢</span> Hospitals</a>
-                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referrals (Dijkstra)</a>
-                <a href="waiting-queue.html" class="nav-item"><span class="nav-icon">⏳</span> Waiting Queues</a>
-                <a href="admissions.html" class="nav-item"><span class="nav-icon">📥</span> Admissions</a>
-                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge</a>
-                <a href="history.html" class="nav-item"><span class="nav-icon">📜</span> History Logs</a>
+                <a href="patients.html" class="nav-item active"><span class="nav-icon">👥</span> Patients</a>
+                <a href="resources.html" class="nav-item"><span class="nav-icon">📦</span> Available Resources</a>
+                <a href="referrals.html" class="nav-item"><span class="nav-icon">🚑</span> Referral Hospitals</a>
+                <a href="discharge.html" class="nav-item"><span class="nav-icon">📤</span> Discharge Summary</a>
             </nav>
         </aside>
 
@@ -110,100 +130,100 @@
         <main class="main-wrapper">
             <header class="top-header">
                 <div class="page-headline">
-                    <h1>Patient Management & Clinical Episodes</h1>
-                    <p>Citizen identity records, New vs Regular segmentation, clinical triage & Unified Patient 360</p>
+                    <h1>Patients Module</h1>
+                    <p>Register new patients, view clinical medical conditions and severity categorization (Normal, Serious, Critical)</p>
                 </div>
-                <div class="header-actions" style="display:flex; gap:12px; align-items:center;">
-                    <!-- Active Role Selector -->
-                    <div style="display:flex; align-items:center; gap:6px; background:#fff; padding:4px 10px; border-radius:6px; border:1px solid var(--border-color);">
-                        <span style="font-size:12px; font-weight:600; color:var(--text-secondary);">Active Role:</span>
-                        <select id="user-role-select" class="form-control" style="padding:4px 8px; font-size:12px; border:none; outline:none; background:transparent;" onchange="handleRoleChange()">
-                            <option value="RECEPTION">Reception Staff</option>
-                            <option value="DOCTOR">Doctor / Triage Staff</option>
-                            <option value="ADMIN">Administrator</option>
-                        </select>
-                    </div>
-
+                <div class="header-actions">
                     <button class="btn btn-primary" onclick="openNewPatientModal()">
-                        + Register New Patient / Visit
+                        + Register New Patient
                     </button>
                 </div>
             </header>
 
             <div class="content-body">
-                <!-- Patient Segmentation Tabs -->
-                <div class="patient-type-tabs">
-                    <button class="patient-type-tab active" id="tab-all-patients" onclick="switchPatientFilter('ALL')">
-                        All Patients (<span id="count-all">0</span>)
+                <!-- Patient Acuity Overview KPI Cards -->
+                <div class="patient-kpi-grid">
+                    <div class="patient-kpi-card">
+                        <div class="patient-kpi-icon" style="background:#e0f2fe; color:#0284c7;">👥</div>
+                        <div>
+                            <div class="patient-kpi-num" id="kpi-total-patients">0</div>
+                            <div class="patient-kpi-label">Total Registered</div>
+                        </div>
+                    </div>
+                    <div class="patient-kpi-card">
+                        <div class="patient-kpi-icon" style="background:#fee2e2; color:#dc2626;">🚨</div>
+                        <div>
+                            <div class="patient-kpi-num" id="kpi-critical-patients" style="color:#dc2626;">0</div>
+                            <div class="patient-kpi-label">Critical Severity</div>
+                        </div>
+                    </div>
+                    <div class="patient-kpi-card">
+                        <div class="patient-kpi-icon" style="background:#fef3c7; color:#d97706;">⚠️</div>
+                        <div>
+                            <div class="patient-kpi-num" id="kpi-serious-patients" style="color:#d97706;">0</div>
+                            <div class="patient-kpi-label">Serious Acuity</div>
+                        </div>
+                    </div>
+                    <div class="patient-kpi-card">
+                        <div class="patient-kpi-icon" style="background:#dcfce7; color:#15803d;">🟢</div>
+                        <div>
+                            <div class="patient-kpi-num" id="kpi-normal-patients" style="color:#15803d;">0</div>
+                            <div class="patient-kpi-label">Normal / Routine</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Severity Filter Buttons -->
+                <div class="severity-filter-bar">
+                    <button class="severity-filter-btn active" id="filter-all" onclick="setSeverityFilter('ALL')">
+                        All Acuities (<span id="count-filter-all">0</span>)
                     </button>
-                    <button class="patient-type-tab" id="tab-new-patients" onclick="switchPatientFilter('NEW')">
-                        New Patients (<span id="count-new">0</span>)
+                    <button class="severity-filter-btn" id="filter-critical" onclick="setSeverityFilter('Critical')">
+                        🚨 Critical Only (<span id="count-filter-critical">0</span>)
                     </button>
-                    <button class="patient-type-tab" id="tab-regular-patients" onclick="switchPatientFilter('REGULAR')">
-                        Regular Patients (<span id="count-regular">0</span>)
+                    <button class="severity-filter-btn" id="filter-serious" onclick="setSeverityFilter('Serious')">
+                        ⚠️ Serious Only (<span id="count-filter-serious">0</span>)
+                    </button>
+                    <button class="severity-filter-btn" id="filter-normal" onclick="setSeverityFilter('Normal')">
+                        🟢 Normal Only (<span id="count-filter-normal">0</span>)
                     </button>
                 </div>
 
-                <!-- Filter & Search Bar -->
+                <!-- Search & Info Bar -->
                 <div class="filter-bar">
-                    <div class="search-input-wrapper">
+                    <div class="search-input-wrapper" style="flex:1;">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="patient-search" class="form-control" placeholder="Search by patient name, citizen ID (P-1001), or 10-digit mobile...">
+                        <input type="text" id="patient-search-input" class="form-control"
+                               placeholder="Search patient by Citizen ID (e.g. P-1002), Full Name, or 10-digit mobile number..."
+                               oninput="filterPatientsTable()">
                     </div>
-                    <div class="filter-group">
-                        <span class="cell-muted" id="filter-status-desc">Regular patients retain historical preferred doctor; New patients select or receive recommendation.</span>
+                    <div style="font-size:12.5px; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+                        <span>🔒</span> Prescriptions and resource checks are handled exclusively in the <strong>Doctors Module</strong>.
                     </div>
                 </div>
 
-                <!-- Patients Master Directory Table -->
-                <div class="table-card" style="margin-bottom: 28px;">
+                <!-- Patients Directory Table -->
+                <div class="table-card">
                     <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="font-size: 15px; font-weight: 700;">Registered Patients (Citizen Directory)</h3>
-                        <span class="badge badge-info">Persistent Citizen Identity</span>
+                        <h3 style="font-size: 15px; font-weight: 700;">Government Hospital Patient Registry</h3>
+                        <span class="badge badge-info">Auto Sequence: P-1001, P-1002...</span>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Patient ID</th>
-                                    <th>Full Name</th>
-                                    <th>Type</th>
-                                    <th>DOB / Age / Gender</th>
-                                    <th>Mobile & Email</th>
-                                    <th>Preferred Doctor</th>
-                                    <th>Actions</th>
+                                    <th>Patient Name</th>
+                                    <th>Age / Gender / DOB</th>
+                                    <th>Contact & Address</th>
+                                    <th>Reported Medical Condition / Symptoms</th>
+                                    <th>Severity Level</th>
+                                    <th>Admission Status</th>
+                                    <th>Doctor Prescription</th>
                                 </tr>
                             </thead>
                             <tbody id="patients-table-body">
-                                <tr><td colspan="7" class="empty-state">Loading patient citizen records from MySQL...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Recent Clinical Visits Stream -->
-                <div class="table-card">
-                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="font-size: 15px; font-weight: 700;">Clinical Visits & Triage Priority Queue</h3>
-                        <span class="badge badge-available">Severity-Based Triage</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Visit ID</th>
-                                    <th>Patient ID</th>
-                                    <th>Severity (Triage)</th>
-                                    <th>Category</th>
-                                    <th>Visit Status</th>
-                                    <th>Preferred Doctor</th>
-                                    <th>Assigned Doctor</th>
-                                    <th>Arrival Time</th>
-                                    <th>Clinical Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="visits-table-body">
-                                <tr><td colspan="9" class="empty-state">Loading clinical visits...</td></tr>
+                                <tr><td colspan="8" class="empty-state">Loading patient records from database...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -212,30 +232,29 @@
         </main>
     </div>
 
-    <!-- Patient Registration & Intake Modal -->
+    <!-- ============================================================== -->
+    <!-- PATIENT REGISTRATION MODAL                                     -->
+    <!-- ============================================================== -->
     <div id="patient-reg-modal" class="modal-overlay">
         <div class="modal-card" style="max-width: 740px;">
             <div class="modal-header">
-                <h3 id="patient-modal-title">Patient Intake & Registration</h3>
+                <h3>Register New Hospital Patient</h3>
                 <button class="modal-close" onclick="closeModal('patient-reg-modal')">&times;</button>
             </div>
-            <form id="patient-reg-form" novalidate>
+            <form id="patient-reg-form" novalidate onsubmit="handlePatientRegistration(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="existing-patient-id">
-                    
                     <div class="form-grid">
-                        <div class="form-group full-width" style="background:#f1f8fe; padding:12px; border-radius:6px; border-left:4px solid var(--primary);">
-                            <div style="font-size:12.5px; color:var(--primary); font-weight:600;">
-                                ℹ Patient ID and Visit ID are generated automatically by the backend.
-                                Reception staff does NOT assign patient severity during registration; severity is assessed by medical staff in Triage.
-                                Registration does not automatically force hospital admission.
+                        <div class="form-group full-width" style="background:#e0f2fe; padding:12px; border-radius:6px; border-left:4px solid #0284c7;">
+                            <div style="font-size:12.5px; color:#0369a1; font-weight:600;">
+                                🔒 Automatic ID Generation: The Patient ID (e.g. P-1021) is atomically generated by backend sequence upon submission.
+                                Register patient details below; clinical resource prescriptions are processed by doctors.
                             </div>
                         </div>
 
                         <!-- Full Name -->
                         <div class="form-group">
                             <label class="form-label" for="pat-name">Full Name <span class="required">*</span></label>
-                            <input type="text" id="pat-name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
+                            <input type="text" id="pat-name" class="form-control" placeholder="e.g. Sundaramurthy K" required>
                             <div class="field-error-msg" id="err-pat-name">Full Name is mandatory and must contain only valid letters.</div>
                         </div>
 
@@ -250,7 +269,6 @@
                         <div class="form-group">
                             <label class="form-label" for="pat-age">Calculated Age (Years)</label>
                             <input type="number" id="pat-age" class="form-control" readonly style="background:#f3f4f6; cursor:not-allowed;" placeholder="Auto-calculated from DOB">
-                            <span class="cell-muted" style="font-size:11px;">Calculated dynamically from Date of Birth.</span>
                         </div>
 
                         <!-- Gender -->
@@ -265,10 +283,10 @@
                             <div class="field-error-msg" id="err-pat-gender">Gender selection is mandatory.</div>
                         </div>
 
-                        <!-- Mobile Number (10-Digit Indian) -->
+                        <!-- 10-Digit Mobile Number -->
                         <div class="form-group">
                             <label class="form-label" for="pat-phone">10-Digit Mobile Number <span class="required">*</span></label>
-                            <input type="tel" id="pat-phone" class="form-control" maxlength="10" placeholder="e.g. 9841012345" required>
+                            <input type="tel" id="pat-phone" class="form-control" maxlength="10" placeholder="e.g. 9840112233" required>
                             <div class="field-error-msg" id="err-pat-phone">Enter a valid 10-digit Indian mobile number starting with 6-9.</div>
                         </div>
 
@@ -282,158 +300,46 @@
                         <!-- Residential Address -->
                         <div class="form-group full-width">
                             <label class="form-label" for="pat-address">Residential Address <span class="required">*</span></label>
-                            <input type="text" id="pat-address" class="form-control" placeholder="Door No, Street, Locality, District" required>
+                            <input type="text" id="pat-address" class="form-control" placeholder="Door No, Street Name, Town / City" required>
                             <div class="field-error-msg" id="err-pat-address">Residential address is mandatory.</div>
                         </div>
 
-                        <!-- Preferred / Recommended Doctor -->
+                        <!-- Medical Condition & Symptoms -->
                         <div class="form-group full-width">
-                            <label class="form-label" for="pat-pref-doc">
-                                Preferred / Recommended Doctor
-                                <span class="cell-muted" id="pref-doc-hint" style="font-size:11.5px; font-weight:normal; margin-left:6px;">
-                                    (Regular patients display prior preference; New patients can select or receive recommendation)
-                                </span>
-                            </label>
-                            <select id="pat-pref-doc" class="form-control">
-                                <option value="">-- No specific preferred doctor (Auto-assign on triage) --</option>
+                            <label class="form-label" for="pat-condition">Medical Condition / Chief Symptoms <span class="required">*</span></label>
+                            <textarea id="pat-condition" class="form-control" rows="2" placeholder="e.g. Acute severe breathlessness, SpO2 88%, acute chest pain..." required></textarea>
+                            <div class="field-error-msg" id="err-pat-condition">Medical condition / presenting symptoms are mandatory.</div>
+                        </div>
+
+                        <!-- Clinical Severity Categorization -->
+                        <div class="form-group">
+                            <label class="form-label" for="pat-severity">Severity Level <span class="required">*</span></label>
+                            <select id="pat-severity" class="form-control" required style="font-weight:700;">
+                                <option value="Normal">🟢 Normal (Low priority / Routine clinic)</option>
+                                <option value="Serious">⚠️ Serious (Urgent clinical care required)</option>
+                                <option value="Critical">🚨 Critical (Immediate life support priority)</option>
                             </select>
                         </div>
 
-                        <!-- Patient Category -->
+                        <!-- Intake Category -->
                         <div class="form-group">
                             <label class="form-label" for="pat-category">Intake Category</label>
                             <select id="pat-category" class="form-control">
                                 <option value="Outpatient">Outpatient (Routine Clinic)</option>
-                                <option value="Diagnostic-Based">Diagnostic-Based (Prescribed Scan/Lab)</option>
-                                <option value="Inpatient">Inpatient (Clinical Monitoring)</option>
                                 <option value="Emergency">Emergency Patient</option>
+                                <option value="Diagnostic-Based">Diagnostic-Based</option>
+                                <option value="Inpatient">Inpatient</option>
                             </select>
-                        </div>
-
-                        <!-- Preferred Specialization -->
-                        <div class="form-group">
-                            <label class="form-label" for="pat-specialization">Clinical Specialization</label>
-                            <select id="pat-specialization" class="form-control">
-                                <option value="General Medicine">General Medicine</option>
-                                <option value="Cardiology">Cardiology</option>
-                                <option value="Pulmonology">Pulmonology</option>
-                                <option value="Emergency & Critical Care">Emergency & Critical Care</option>
-                                <option value="Orthopedics">Orthopedics</option>
-                                <option value="Pediatrics">Pediatrics</option>
-                                <option value="Neurology">Neurology</option>
-                                <option value="Nephrology">Nephrology</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label class="form-label" for="pat-notes">Intake Notes / Chief Complaint</label>
-                            <textarea id="pat-notes" class="form-control" rows="2" placeholder="Record primary presenting symptoms or intake reasons..."></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('patient-reg-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btn-submit-patient">Register Patient Visit</button>
+                    <button type="submit" id="btn-save-patient" class="btn btn-primary" style="padding:10px 24px; font-weight:700; background:#0fa37f; border-color:#0fa37f;">
+                        💾 Register & Generate Patient ID
+                    </button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Triage Assessment Modal (For Doctor / Medical Staff) -->
-    <div id="triage-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 580px;">
-            <div class="modal-header">
-                <h3>Clinical Triage Assessment</h3>
-                <button class="modal-close" onclick="closeModal('triage-modal')">&times;</button>
-            </div>
-            <form id="triage-form">
-                <div class="modal-body">
-                    <input type="hidden" id="triage-visit-id">
-                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:6px; padding:12px; margin-bottom:16px;">
-                        <div style="font-size:13px;"><strong>Patient:</strong> <span id="triage-pat-name">Loading...</span> (<span id="triage-pat-id">-</span>)</div>
-                        <div style="font-size:13px; margin-top:4px;"><strong>Preferred Doctor:</strong> <span id="triage-pref-doc">None specified</span></div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:16px;">
-                        <label class="form-label" for="triage-severity">Clinical Severity Level <span class="required">*</span></label>
-                        <select id="triage-severity" class="form-control" required style="font-weight:600;">
-                            <option value="Critical">Critical (Immediate Emergency - Priority 1)</option>
-                            <option value="Serious">Serious (Urgent Attention - Priority 2)</option>
-                            <option value="Minor">Minor (Non-Urgent / Routine - Priority 3)</option>
-                        </select>
-                        <span class="cell-muted" style="font-size:11.5px;">Consultation queue processes strictly in priority order: Critical → Serious → Minor.</span>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:16px;">
-                        <label class="form-label" for="triage-assessor">Assessed By (Medical / Triage Staff) <span class="required">*</span></label>
-                        <input type="text" id="triage-assessor" class="form-control" placeholder="e.g. Dr. K. Ramanathan / Staff Nurse Shanti" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="triage-notes">Clinical Assessment Observations</label>
-                        <textarea id="triage-notes" class="form-control" rows="3" placeholder="Enter vital signs, triage scoring, and acuity justification..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('triage-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Triage & Auto-Check Doctor</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Alternative Doctor Dialog Modal -->
-    <div id="alt-doctor-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 620px;">
-            <div class="modal-header" style="background:#fffbeb; border-bottom:1px solid #fde68a;">
-                <h3 style="color:#b45309;">⚠️ Doctor Availability Notice</h3>
-                <button class="modal-close" onclick="closeModal('alt-doctor-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="alt-visit-id">
-                <div id="alt-doctor-message" style="font-size:14px; line-height:1.5; color:var(--text-primary); margin-bottom:16px;">
-                    <!-- Message filled dynamically -->
-                </div>
-
-                <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:6px; padding:12px; margin-bottom:16px;">
-                    <div style="font-weight:600; font-size:13px; margin-bottom:8px;">Available Matching Doctors On Duty:</div>
-                    <div id="alt-doctors-list">
-                        <!-- Radio buttons filled dynamically -->
-                    </div>
-                </div>
-
-                <div style="font-size:12px; color:var(--text-secondary);">
-                    If the alternative is rejected or no suitable doctor is available, the visit will be marked as <strong>No Doctor Available</strong> and added to the waiting queue. Patient records and visit history are strictly preserved.
-                </div>
-            </div>
-            <div class="modal-footer" style="display:flex; justify-content:space-between;">
-                <button type="button" class="btn btn-outline" onclick="respondAlternativeDoctor(false)" style="color:#dc2626; border-color:#fca5a5;">
-                    Reject Alternative (Mark No Doctor Available)
-                </button>
-                <button type="button" class="btn btn-primary" onclick="respondAlternativeDoctor(true)">
-                    Accept & Assign Selected Doctor
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Unified Patient 360 Profile Modal -->
-    <div id="patient-360-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 980px; max-height: 90vh; overflow-y:auto;">
-            <div class="modal-header" style="position:sticky; top:0; background:#fff; z-index:10; border-bottom:1px solid var(--border-color);">
-                <div>
-                    <h3 id="p360-header-name">Patient 360° Comprehensive Record</h3>
-                    <span class="cell-muted" id="p360-header-id">Citizen ID: -</span>
-                </div>
-                <button class="modal-close" onclick="closeModal('patient-360-modal')">&times;</button>
-            </div>
-            <div class="modal-body" id="p360-body" style="padding:20px;">
-                <!-- Filled dynamically via JS -->
-                <div class="empty-state">Loading patient complete medical profile...</div>
-            </div>
-            <div class="modal-footer" style="position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border-color);">
-                <button type="button" class="btn btn-outline" onclick="closeModal('patient-360-modal')">Close Record</button>
-            </div>
         </div>
     </div>
 

@@ -55,13 +55,13 @@ function getSeverityBadge(severity) {
     if (!severity) return '';
     const sev = severity.toLowerCase();
     if (sev === 'critical') {
-        return `<span class="badge badge-critical">Critical</span>`;
+        return `<span class="badge badge-critical" style="background:#fee2e2; color:#b91c1c; font-weight:700; border:1px solid #fca5a5;">Critical</span>`;
     } else if (sev === 'serious') {
-        return `<span class="badge badge-serious">Serious</span>`;
-    } else if (sev === 'minor') {
-        return `<span class="badge badge-minor">Minor</span>`;
+        return `<span class="badge badge-serious" style="background:#fef3c7; color:#b45309; font-weight:700; border:1px solid #fcd34d;">Serious</span>`;
+    } else if (sev === 'normal' || sev === 'minor') {
+        return `<span class="badge badge-minor" style="background:#dcfce7; color:#15803d; font-weight:700; border:1px solid #86efac;">Normal</span>`;
     } else if (sev === 'pending_triage') {
-        return `<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700;">Awaiting Triage</span>`;
+        return `<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">Registered</span>`;
     }
     return `<span class="badge badge-info">${severity}</span>`;
 }
